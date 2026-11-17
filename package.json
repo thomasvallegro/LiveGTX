@@ -1,0 +1,16 @@
+{
+  "name": "livegfx",
+  "version": "1.0.0",
+  "description": "Grafiche live animate per OBS controllabili da telefono",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "ws": "^8.23.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

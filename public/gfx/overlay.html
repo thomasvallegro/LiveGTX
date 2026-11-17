@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<title>LiveGFX · Overlay unico</title>
+<style>
+  html, body { margin: 0; width: 1920px; height: 1080px; overflow: hidden; background: transparent; }
+  body.preview-bg { background: linear-gradient(135deg, #10131f, #1b1f33); }
+  iframe { position: absolute; inset: 0; width: 1920px; height: 1080px; border: 0; background: transparent; pointer-events: none; }
+</style>
+</head>
+<body>
+<!-- Tutte le grafiche in un'unica Browser Source. L'ordine = livelli (l'ultima sta sopra). -->
+<script>
+  const q = location.search;
+  if (new URLSearchParams(q).get('bg') === '1') document.body.classList.add('preview-bg');
+  const pass = new URLSearchParams(q); pass.delete('bg');
+  const extra = pass.toString() ? '?' + pass.toString() : '';
+  for (const name of ['ticker', 'clock', 'leaderboard', 'scoreboard', 'timer', 'lowerthird', 'vote', 'wheel', 'subtitles', 'announce', 'cover']) {
+    const f = document.createElement('iframe');
+    f.src = name + '.html' + extra;
+    f.setAttribute('allowtransparency', 'true');
+    document.body.appendChild(f);
+  }
+</script>
+</body>
+</html>

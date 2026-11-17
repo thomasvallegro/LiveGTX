@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<title>LiveGFX · Classifica</title>
+<link rel="stylesheet" href="common.css">
+<link rel="stylesheet" href="glass.css">
+<link rel="stylesheet" href="themes.css">
+<style>
+  #board { position: absolute; right: 110px; top: 180px; width: 780px; }
+  .head { position: relative; display: flex; align-items: flex-end; justify-content: space-between;
+    padding: 22px 28px 18px; background: var(--panel); border-radius: var(--radius) var(--radius) 0 0; overflow: hidden; }
+  .head::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 3px;
+    background: linear-gradient(90deg, var(--yellow), var(--green), var(--cyan)); }
+  .title { font-size: 58px; line-height: 1; color: var(--accent); }
+  .live { display: flex; align-items: center; gap: 10px; font: 700 22px var(--font-display); letter-spacing: .14em;
+    color: var(--text); padding: 8px 14px; background: var(--panel-2); border-radius: var(--radius); }
+  .live .dot { width: 12px; height: 12px; border-radius: 50%; background: var(--green); box-shadow: 0 0 12px var(--green); }
+  .rows { position: relative; background: var(--panel); border-radius: 0 0 var(--radius) var(--radius); padding: 8px 0 12px; }
+  .row { position: relative; display: grid; grid-template-columns: 92px 1fr auto; align-items: center;
+    height: 74px; padding: 0 28px 0 0; }
+  .row + .row { border-top: 1px solid var(--line); }
+  .rank { font: 700 40px var(--font-display); text-align: center; color: var(--text-dim); }
+  .row[data-rank="1"] .rank { color: var(--yellow); text-shadow: 0 0 16px rgba(255,225,77,calc(.7 * var(--glow))); }
+  .row[data-rank="2"] .rank { color: var(--cyan); }
+  .row[data-rank="3"] .rank { color: var(--green); }
+  .who { min-width: 0; }
+  .name { font: 700 34px var(--font-display); text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .sub { font: 400 19px var(--font-body); color: var(--text-dim); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .score { font: 700 42px var(--font-display); text-align: right; min-width: 140px; }
+  .score small { font-size: 18px; color: var(--text-dim); margin-left: 6px; letter-spacing: .1em; }
+  .flash { position: absolute; inset: 0; pointer-events: none; opacity: 0; }
+  .flash.up { background: linear-gradient(90deg, rgba(61,255,160,.35), transparent 70%); }
+  .flash.down { background: linear-gradient(90deg, rgba(255,77,106,.28), transparent 70%); }
+  .flash.top { background: linear-gradient(90deg, rgba(255,225,77,.5), transparent 80%); }
+  .empty { padding: 26px 28px; font: 400 22px var(--font-body); color: var(--text-dim); }
+</style>
+</head>
+<body>
+<div id="board" class="neon-edge hidden-init">
+  <div class="head"><div class="title display glow-accent" id="title"></div>
+    <div class="live"><span class="dot"></span><span id="subtitle"></span></div></div>
+  <div class="rows" id="rows"></div>
+</div>
+<script src="../vendor/gsap.min.js"></script>
+<script src="../vendor/Flip.min.js"></script>
+<script src="common.js"></script>
+<script>
+gsap.registerPlugin(Flip);
+const board = document.getElementById('board');
+const rowsEl = document.getElementById('rows');
+const esc = LiveGFX.esc;
+let visible = false;
+let lastRanks = {};     // id -> posizione precedente
+let lastScores = {};    // id -> punteggio precedente
+
+function ranked(lb) {
+  const list = [...lb.entries].sort((a, b) => lb.order === 'asc' ? a.score - b.score : b.score - a.score);
+  // Classifica "da gara": a parità di punti stessa posizione (1, 1, 3…)
+  let rank = 0;
+  return list.map((e, i) => {
+    if (i === 0 || e.score !== list[i - 1].score) rank = i + 1;
+    return { ...e, rank };
+  }).slice(0, lb.maxRows);
+}
+
+function rowHtml(e, unit) {
+  return `<div class="flash"></div><div class="rank">${e.rank}</div>
+    <div class="who"><div class="name">${esc(e.name)}</div>${e.sub ? `<div class="sub">${esc(e.sub)}</div>` : ''}</div>
+    <div class="score num"><span class="v">${e.score}</span>${unit ? `<small>${esc(unit)}</small>` : ''}</div>`;
+}
+
+function render(lb, animate) {
+  const list = ranked(lb);
+  const flipState = animate ? Flip.getState(rowsEl.querySelectorAll('.row')) : null;
+  const existing = new Map([...rowsEl.querySelectorAll('.row')].map((r) => [r.dataset.id, r]));
+  const frag = document.createDocumentFragment();
+  const changes = [];
+
+  for (const [i, e] of list.entries()) {
+    let row = existing.get(e.id);
+    const oldScore = lastScores[e.id];
+    if (!row) { row = document.createElement('div'); row.className = 'row'; row.dataset.id = e.id; row.dataset.flipId = e.id; }
+    existing.delete(e.id);
+    row.dataset.rank = e.rank;
+    row.innerHTML = rowHtml({ ...e, score: oldScore ?? e.score }, lb.unit);
+    frag.appendChild(row);
+    const oldPos = lastRanks[e.id];
+    changes.push({ row, e, oldScore, moved: oldPos === undefined ? 0 : oldPos - i, pos: i });
+  }
+  rowsEl.innerHTML = '';
+  if (!list.length) rowsEl.innerHTML = '<div class="empty">In attesa dei partecipanti…</div>';
+  rowsEl.appendChild(frag);
+
+  if (animate && flipState) {
+    Flip.from(flipState, {
+      duration: 0.9, ease: 'power3.inOut', targets: rowsEl.querySelectorAll('.row'),
+      onEnter: (els) => gsap.fromTo(els, { opacity: 0, x: -60 }, { opacity: 1, x: 0, duration: 0.6, ease: 'power3.out' }),
+    });
+  }
+  for (const c of changes) {
+    const v = c.row.querySelector('.v');
+    if (c.oldScore !== undefined && c.oldScore !== c.e.score) {
+      // Il punteggio "conta" fino al nuovo valore
+      const o = { n: c.oldScore };
+      gsap.to(o, { n: c.e.score, duration: 0.9, ease: 'power2.out', onUpdate: () => { v.textContent = Math.round(o.n); } });
+      gsap.fromTo(v, { scale: 1.25 }, { scale: 1, duration: 0.6, ease: 'back.out(3)', transformOrigin: '100% 50%' });
+    }
+    if (animate && c.moved !== 0) {
+      const f = c.row.querySelector('.flash');
+      f.className = 'flash ' + (c.pos === 0 && c.moved > 0 ? 'top' : c.moved > 0 ? 'up' : 'down');
+      gsap.fromTo(f, { opacity: 1 }, { opacity: 0, duration: 1.6, delay: 0.5, ease: 'power2.out' });
+    }
+  }
+  lastRanks = Object.fromEntries(list.map((e, i) => [e.id, i]));
+  lastScores = Object.fromEntries(list.map((e) => [e.id, e.score]));
+}
+
+function show() {
+  gsap.killTweensOf(board);
+  gsap.set(board, { visibility: 'visible', opacity: 1 });
+  const tl = gsap.timeline();
+  tl.fromTo(board, { clipPath: LiveGFX.clip('inset(0 0 0 100%)', board) }, { clipPath: LiveGFX.clip('inset(0 0 0 0%)', board), duration: 0.7, ease: 'power4.inOut',
+      onComplete: () => gsap.set(board, { clearProps: 'clipPath' }) })
+    .from('.title', { y: 40, opacity: 0, duration: 0.5, ease: 'power3.out' }, '-=0.25')
+    .from('.live', { x: 40, opacity: 0, duration: 0.4 }, '<')
+    .from(rowsEl.children, { x: 50, opacity: 0, stagger: 0.07, duration: 0.5, ease: 'power3.out' }, '-=0.3');
+}
+function hide() {
+  gsap.killTweensOf(board);
+  gsap.timeline()
+    .to(rowsEl.children, { x: 40, opacity: 0, stagger: 0.03, duration: 0.25 })
+    .to(board, { clipPath: LiveGFX.clip('inset(0 0 0 100%)', board), duration: 0.5, ease: 'power4.in' }, '-=0.1')
+    .set(board, { visibility: 'hidden' })
+    .set(rowsEl.children, { x: 0, opacity: 1 });
+}
+
+gsap.to('.live .dot', { opacity: 0.25, duration: 0.8, repeat: -1, yoyo: true, ease: 'sine.inOut' });
+
+LiveGFX.onState((s, prev) => {
+  const lb = s.leaderboard;
+  document.getElementById('title').textContent = lb.title;
+  document.getElementById('subtitle').textContent = lb.subtitle || 'LIVE';
+  document.querySelector('.live').style.display = lb.subtitle ? '' : 'none';
+  const changed = !prev || JSON.stringify(prev.leaderboard.entries) !== JSON.stringify(lb.entries)
+    || prev.leaderboard.maxRows !== lb.maxRows || prev.leaderboard.order !== lb.order || prev.leaderboard.unit !== lb.unit;
+  if (changed) render(lb, visible);
+  if (lb.visible && !visible) { visible = true; show(); }
+  else if (!lb.visible && visible) { visible = false; hide(); }
+});
+</script>
+</body>
+</html>

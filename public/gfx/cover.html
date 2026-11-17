@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<title>LiveGFX · Copertura</title>
+<link rel="stylesheet" href="common.css">
+<link rel="stylesheet" href="glass.css">
+<link rel="stylesheet" href="themes.css">
+<!--
+  Copertura a schermo intero: entra sopra tutto e nasconde le fonti sotto
+  (cambio camera, problemi tecnici, pausa). In OBS mettila IN CIMA alla scena.
+  È anche l'ultimo livello dell'overlay unico.
+-->
+<style>
+  #cv { position: fixed; inset: 0; visibility: hidden; overflow: hidden; }
+  #bgl { position: absolute; inset: 0; background: #000; }
+  .content { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; padding: 0 140px; gap: 18px; }
+  .logo { max-width: 520px; max-height: 300px; object-fit: contain; filter: drop-shadow(0 10px 30px rgba(0,0,0,.45)); margin-bottom: 14px; }
+  .logo[hidden] { display: none; }
+  .title { font-size: 120px; line-height: 1.02; color: #fff; text-shadow: 0 6px 40px rgba(0,0,0,.45); }
+  .title:empty, .subtitle:empty { display: none; }
+  .subtitle { font: 600 40px var(--font-body); color: rgba(255,255,255,.88); letter-spacing: .04em; text-shadow: 0 3px 20px rgba(0,0,0,.45); }
+  .title .w { display: inline-block; white-space: pre; }
+</style>
+</head>
+<body>
+<div id="cv">
+  <div id="bgl"></div>
+  <div class="content">
+    <img class="logo" id="logo" alt="" hidden>
+    <div class="title display" id="title"></div>
+    <div class="subtitle" id="subtitle"></div>
+  </div>
+</div>
+<script src="../vendor/gsap.min.js"></script>
+<script src="common.js"></script>
+<script src="bgrender.js"></script>
+<script>
+const cv = document.getElementById('cv');
+let renderer = null, visible = false, lastLook = '', lastTitle = null, transition = 'fade';
+
+function ensureRenderer() {
+  if (!renderer) renderer = BGRender.create(document.getElementById('bgl'), { fps: 30 });
+  return renderer;
+}
+
+// Entrate e uscite: dissolvenza · tendina · zoom · cerchio
+const IN = {
+  fade: () => gsap.fromTo(cv, { opacity: 0 }, { opacity: 1, duration: 0.8, ease: 'power2.out' }),
+  wipe: () => gsap.fromTo(cv, { clipPath: 'inset(0% 100% 0% 0%)' }, { clipPath: 'inset(0% 0% 0% 0%)', duration: 0.9, ease: 'power3.inOut' }),
+  zoom: () => gsap.fromTo(cv, { opacity: 0, scale: 1.18 }, { opacity: 1, scale: 1, duration: 0.9, ease: 'power3.out' }),
+  iris: () => gsap.fromTo(cv, { clipPath: 'circle(0% at 50% 50%)' }, { clipPath: 'circle(75% at 50% 50%)', duration: 1.0, ease: 'power3.inOut' }),
+};
+const OUT = {
+  fade: () => gsap.to(cv, { opacity: 0, duration: 0.7, ease: 'power2.in' }),
+  wipe: () => gsap.to(cv, { clipPath: 'inset(0% 0% 0% 100%)', duration: 0.8, ease: 'power3.inOut' }),
+  zoom: () => gsap.to(cv, { opacity: 0, scale: 0.92, duration: 0.7, ease: 'power3.in' }),
+  iris: () => gsap.to(cv, { clipPath: 'circle(0% at 50% 50%)', duration: 0.8, ease: 'power3.inOut' }),
+};
+
+function setTitle(text) {
+  const el = document.getElementById('title');
+  el.innerHTML = '';
+  for (const w of String(text).split(/(\s+)/)) {
+    const s = document.createElement('span'); s.className = 'w'; s.textContent = w; el.appendChild(s);
+  }
+  LiveGFX.fitText(el, 120, 60);
+}
+
+LiveGFX.onState((s) => {
+  const C = s.cover;
+  transition = C.transition;
+  // aspetto: come lo sfondo attuale o un preset
+  let look = s.background;
+  if (C.look !== 'bg') { const p = s.bgPresets.find((x) => x.id === C.look); if (p) look = p.bg; }
+  const key = JSON.stringify(look);
+  if (key !== lastLook) { lastLook = key; ensureRenderer().set(look); }
+
+  if (C.title !== lastTitle) { lastTitle = C.title; setTitle(C.title); }
+  document.getElementById('subtitle').textContent = C.subtitle;
+  const logo = document.getElementById('logo');
+  logo.hidden = !(C.showLogo && C.logo);
+  if (C.logo && logo.getAttribute('src') !== C.logo) logo.src = C.logo;
+
+  if (C.visible && !visible) {
+    visible = true;
+    ensureRenderer().resume();
+    gsap.killTweensOf(cv);
+    gsap.set(cv, { visibility: 'visible', opacity: 1, scale: 1, clipPath: 'none' });
+    (IN[transition] || IN.fade)();
+    gsap.fromTo('.content > *:not([hidden])', { y: 40, opacity: 0 }, { y: 0, opacity: 1, duration: 0.7, stagger: 0.1, delay: 0.35, ease: 'power3.out' });
+  } else if (!C.visible && visible) {
+    visible = false;
+    gsap.killTweensOf(cv);
+    (OUT[transition] || OUT.fade)().eventCallback('onComplete', () => {
+      gsap.set(cv, { visibility: 'hidden', clipPath: 'none', opacity: 1, scale: 1 });
+      if (renderer) renderer.pause();   // nascosta: niente calcoli inutili
+    });
+  }
+});
+// all'avvio, se la copertura non è in onda, il motore resta fermo
+setTimeout(() => { if (!visible && renderer) renderer.pause(); }, 300);
+</script>
+</body>
+</html>

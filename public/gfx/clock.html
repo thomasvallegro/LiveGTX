@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<title>LiveGFX · Orologio</title>
+<link rel="stylesheet" href="common.css">
+<link rel="stylesheet" href="glass.css">
+<link rel="stylesheet" href="themes.css">
+<style>
+  #ck { position: absolute; display: flex; align-items: stretch; background: var(--panel); border-radius: var(--radius); overflow: hidden; }
+  #ck.top-left { top: 44px; left: 110px; }
+  #ck.top-right { top: 44px; right: 110px; }
+  #ck.bottom-left { bottom: 110px; left: 110px; }
+  #ck.bottom-right { bottom: 110px; right: 110px; }
+  #ck .label { display: flex; align-items: center; padding: 0 16px; font: 700 18px var(--font-display); letter-spacing: .2em;
+    text-transform: uppercase; color: var(--text-on-accent); background: var(--accent); }
+  #ck .label:empty { display: none; }
+  #ck .body { display: flex; flex-direction: column; justify-content: center; padding: 6px 24px 8px; }
+  #ck .time { font: 700 52px var(--font-display); line-height: 1; color: var(--text); white-space: nowrap; }
+  #ck .time .colon { display: inline-block; width: .32em; text-align: center; }
+  #ck .time .sec { font-size: .55em; color: var(--text-dim); margin-left: 6px; }
+  #ck .date { font: 600 17px var(--font-body); color: var(--text-dim); letter-spacing: .08em; text-transform: uppercase; margin-top: 4px; white-space: nowrap; }
+  #ck .date:empty { display: none; }
+</style>
+</head>
+<body>
+<div id="ck" class="neon-edge hidden-init top-left">
+  <div class="label" id="label"></div>
+  <div class="body">
+    <div class="time num" id="time"></div>
+    <div class="date" id="date"></div>
+  </div>
+</div>
+<script src="../vendor/gsap.min.js"></script>
+<script src="common.js"></script>
+<script>
+const ck = document.getElementById('ck');
+const timeEl = document.getElementById('time');
+const dateEl = document.getElementById('date');
+let visible = false, cfg = { seconds: false, date: false };
+const GIORNI = ['domenica', 'lunedì', 'martedì', 'mercoledì', 'giovedì', 'venerdì', 'sabato'];
+const MESI = ['gennaio', 'febbraio', 'marzo', 'aprile', 'maggio', 'giugno', 'luglio', 'agosto', 'settembre', 'ottobre', 'novembre', 'dicembre'];
+const p2 = (n) => String(n).padStart(2, '0');
+let lastKey = '';
+
+function tick() {
+  const d = new Date(LiveGFX.serverNow());   // ora del Mac che fa da server, nel fuso orario di questo browser
+  const key = d.getHours() + ':' + d.getMinutes() + ':' + (cfg.seconds ? d.getSeconds() : '') + cfg.date;
+  if (key !== lastKey) {
+    lastKey = key;
+    timeEl.innerHTML = `${p2(d.getHours())}<span class="colon">:</span>${p2(d.getMinutes())}` + (cfg.seconds ? `<span class="sec">${p2(d.getSeconds())}</span>` : '');
+    dateEl.textContent = cfg.date ? `${GIORNI[d.getDay()]} ${d.getDate()} ${MESI[d.getMonth()]}` : '';
+  }
+  // i due punti "respirano" se i secondi non sono visibili
+  const c = timeEl.querySelector('.colon');
+  if (c && !cfg.seconds) c.style.opacity = d.getMilliseconds() < 500 ? 1 : 0.35;
+}
+setInterval(tick, 100);
+
+LiveGFX.onState((s) => {
+  const C = s.clock;
+  cfg = C;
+  document.getElementById('label').textContent = C.label || '';
+  ck.className = 'neon-edge ' + C.position + (visible ? '' : ' hidden-init');
+  lastKey = ''; tick();
+  if (C.visible && !visible) {
+    visible = true;
+    ck.classList.remove('hidden-init');
+    gsap.killTweensOf(ck);
+    const fromY = C.position.startsWith('top') ? -120 : 120;
+    gsap.fromTo(ck, { y: fromY, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6, ease: 'power4.out' });
+  } else if (!C.visible && visible) {
+    visible = false;
+    gsap.killTweensOf(ck);
+    const toY = C.position.startsWith('top') ? -120 : 120;
+    gsap.to(ck, { y: toY, opacity: 0, duration: 0.45, ease: 'power3.in', onComplete: () => ck.classList.add('hidden-init') });
+  }
+});
+</script>
+</body>
+</html>

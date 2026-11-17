@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0b0e1a">
+<title>LiveGFX · Regia</title>
+<link rel="stylesheet" href="panel.css">
+</head>
+<body>
+
+<!-- LOGIN -->
+<section id="login" class="login">
+  <div class="login-box">
+    <div class="logo">LIVE<span>GFX</span></div>
+    <p>Inserisci il PIN mostrato nella finestra del server</p>
+    <form id="loginForm">
+      <input id="pin" type="password" inputmode="numeric" autocomplete="current-password" placeholder="PIN" maxlength="12" required>
+      <button class="btn primary big" type="submit">Entra</button>
+    </form>
+    <div id="loginErr" class="err"></div>
+  </div>
+</section>
+
+<!-- APP -->
+<section id="app" hidden>
+  <header class="top">
+    <div class="logo small">LIVE<span>GFX</span></div>
+    <div class="status"><span id="conn" class="conn"></span><span id="roleLabel"></span></div>
+    <button class="btn ghost" id="previewBtn" title="Anteprima">👁</button>
+    <button class="btn danger admin-only" data-a="all.hide" data-confirm="Nascondere TUTTE le grafiche?">Nascondi tutto</button>
+  </header>
+
+  <div id="previewWrap" class="preview" hidden><div class="preview-inner"><iframe id="previewFrame" title="Anteprima"></iframe></div></div>
+
+  <nav class="tabs" id="tabs">
+    <button data-tab="lb" class="active">🏆<span>Classifica</span><i class="onair-dot" data-dot="leaderboard"></i></button>
+    <button data-tab="lt">🎤<span>Ospiti</span><i class="onair-dot" data-dot="lowerthird"></i></button>
+    <button data-tab="sb">⚔️<span>Squadre</span><i class="onair-dot" data-dot="scoreboard"></i></button>
+    <button data-tab="tm">⏱<span>Timer</span><i class="onair-dot" data-dot="timer"></i></button>
+    <button data-tab="tk">📰<span>Ticker</span><i class="onair-dot" data-dot="ticker"></i></button>
+    <button data-tab="an">📣<span>Annuncio</span><i class="onair-dot" data-dot="announce"></i></button>
+    <button data-tab="vt">🗳<span>Televoto</span><i class="onair-dot" data-dot="vote"></i></button>
+    <button data-tab="wh">🎡<span>Ruota</span><i class="onair-dot" data-dot="wheel"></i></button>
+    <button data-tab="st">💬<span>Sottotitoli</span><i class="onair-dot" data-dot="subtitles"></i></button>
+    <button data-tab="ck">🕒<span>Orologio</span><i class="onair-dot" data-dot="clock"></i></button>
+    <button data-tab="bg">🌈<span>Sfondi</span><i class="onair-dot" data-dot="cover"></i></button>
+    <button data-tab="set">⚙️<span>Impostazioni</span></button>
+  </nav>
+
+  <main>
+    <!-- CLASSIFICA -->
+    <div class="tab" data-panel="lb">
+      <div class="onair-row"><h2>Classifica</h2><button class="btn onair admin-only" data-toggle="leaderboard" data-on="lb.show" data-off="lb.hide"></button></div>
+      <form class="card add" data-form="lb.add">
+        <div class="grid3">
+          <input name="name" placeholder="Nome / squadra" required maxlength="40">
+          <input name="sub" placeholder="Dettaglio (facoltativo)" maxlength="40">
+          <input name="score" type="number" inputmode="numeric" placeholder="Punti" value="0">
+        </div>
+        <button class="btn primary">+ Aggiungi</button>
+      </form>
+      <div id="lbList" class="list"></div>
+      <details class="card admin-only">
+        <summary>Opzioni classifica</summary>
+        <div class="grid2">
+          <label>Titolo<input data-cfg="lb.config:title" maxlength="40"></label>
+          <label>Etichetta (es. LIVE, vuoto = nascosta)<input data-cfg="lb.config:subtitle" maxlength="30"></label>
+          <label>Unità punteggio<input data-cfg="lb.config:unit" maxlength="8"></label>
+          <label>Righe visibili<input data-cfg="lb.config:maxRows" type="number" min="3" max="12"></label>
+          <label>Ordine<select data-cfg="lb.config:order"><option value="desc">Più punti = primo</option><option value="asc">Meno punti = primo (es. tempi)</option></select></label>
+        </div>
+        <div class="row-btns">
+          <button class="btn" data-a="lb.resetScores" data-confirm="Azzerare tutti i punteggi?">Azzera punteggi</button>
+          <button class="btn danger" data-a="lb.clear" data-confirm="Eliminare tutti i partecipanti?">Svuota classifica</button>
+        </div>
+      </details>
+    </div>
+
+    <!-- OSPITI -->
+    <div class="tab" data-panel="lt" hidden>
+      <div class="onair-row"><h2>Ospiti</h2>
+        <div class="row-btns admin-only"><button class="btn" data-a="lt.show">Rimostra</button><button class="btn onair-off" data-a="lt.hide">Nascondi</button></div></div>
+      <div id="ltCurrent" class="card current"></div>
+      <form class="card add" id="ltForm">
+        <div class="grid3">
+          <input name="name" placeholder="Nome e cognome" required maxlength="50">
+          <input name="role" placeholder="Ruolo / descrizione" maxlength="60">
+          <input name="tag" placeholder="Etichetta (es. OSPITE)" maxlength="20">
+        </div>
+        <div class="row-btns">
+          <button class="btn" data-submit="lt.queue.add">+ Metti in coda</button>
+          <button class="btn primary admin-only" data-submit="lt.quick">⚡ In onda subito</button>
+        </div>
+      </form>
+      <h3>In coda <small>(preparati, non ancora visibili)</small></h3>
+      <div id="ltQueue" class="list"></div>
+      <div class="card admin-only">
+        <label>Posizione<select data-cfg="lt.position:value"><option value="left">Sinistra</option><option value="right">Destra</option></select></label>
+      </div>
+    </div>
+
+    <!-- SQUADRE -->
+    <div class="tab" data-panel="sb" hidden>
+      <div class="onair-row"><h2>Squadre</h2><button class="btn onair admin-only" data-toggle="scoreboard" data-on="sb.show" data-off="sb.hide"></button></div>
+      <div id="sbTeams" class="teams"></div>
+      <details class="card admin-only">
+        <summary>Opzioni tabellone</summary>
+        <label>Titolo sopra il tabellone (facoltativo)<input data-cfg="sb.config:title" maxlength="40"></label>
+        <div class="row-btns">
+          <button class="btn" data-a="sb.team.add">+ Squadra</button>
+          <button class="btn" data-a="sb.reset" data-confirm="Azzerare i punteggi delle squadre?">Azzera punteggi</button>
+        </div>
+      </details>
+    </div>
+
+    <!-- TIMER -->
+    <div class="tab" data-panel="tm" hidden>
+      <div class="onair-row"><h2>Timer</h2><button class="btn onair admin-only" data-toggle="timer" data-on="timer.show" data-off="timer.hide"></button></div>
+      <div class="card timer-card">
+        <div id="tmDisplay" class="tm-display num">00:00</div>
+        <div class="row-btns center admin-only">
+          <button class="btn primary big" data-a="timer.start">▶ Avvia</button>
+          <button class="btn big" data-a="timer.pause">⏸ Pausa</button>
+          <button class="btn big" data-a="timer.reset">↺ Reset</button>
+        </div>
+        <div class="row-btns center admin-only">
+          <button class="btn" data-a="timer.add" data-delta="-10000">−10s</button>
+          <button class="btn" data-a="timer.add" data-delta="10000">+10s</button>
+          <button class="btn" data-a="timer.add" data-delta="60000">+1 min</button>
+        </div>
+      </div>
+      <form class="card admin-only" id="tmForm">
+        <div class="grid2">
+          <label>Etichetta<input name="label" maxlength="20"></label>
+          <label>Modalità<select name="mode"><option value="countdown">Conto alla rovescia</option><option value="stopwatch">Cronometro</option></select></label>
+          <label>Minuti<input name="min" type="number" min="0" max="600" inputmode="numeric"></label>
+          <label>Secondi<input name="sec" type="number" min="0" max="59" inputmode="numeric"></label>
+        </div>
+        <button class="btn">Imposta (azzera il timer)</button>
+      </form>
+    </div>
+
+    <!-- TICKER -->
+    <div class="tab" data-panel="tk" hidden>
+      <div class="onair-row"><h2>Ticker</h2><button class="btn onair admin-only" data-toggle="ticker" data-on="tk.show" data-off="tk.hide"></button></div>
+      <form class="card" id="tkForm">
+        <label>Notizie (una per riga)<textarea name="items" rows="6"></textarea></label>
+        <div class="grid2">
+          <label>Etichetta<input name="label" maxlength="16"></label>
+          <label>Velocità <output id="tkSpeedOut"></output><input name="speed" type="range" min="30" max="400" step="10"></label>
+        </div>
+        <button class="btn primary">Aggiorna ticker</button>
+      </form>
+    </div>
+
+    <!-- ANNUNCIO -->
+    <div class="tab" data-panel="an" hidden>
+      <div class="onair-row"><h2>Annuncio</h2><button class="btn onair-off admin-only" data-a="an.hide">Nascondi</button></div>
+      <form class="card admin-only" id="anForm">
+        <label>Sopratitolo<input name="kicker" placeholder="es. PROSSIMA SFIDA" maxlength="40"></label>
+        <label>Titolo<input name="title" placeholder="es. FINALE" required maxlength="60"></label>
+        <label>Sottotitolo<input name="subtitle" placeholder="es. Squadra Rossa vs Squadra Blu" maxlength="90"></label>
+        <button class="btn primary big">📣 Mostra annuncio</button>
+      </form>
+      <h3>Recenti</h3>
+      <div id="anRecent" class="list"></div>
+    </div>
+
+    <!-- TELEVOTO / ALZATA DI MANO -->
+    <div class="tab" data-panel="vt" hidden>
+      <div class="onair-row"><h2>Televoto</h2><button class="btn onair admin-only" data-toggle="vote" data-on="vote.show" data-off="vote.hide"></button></div>
+      <div class="card" id="vtLive"></div>
+      <div class="card admin-only">
+        <div class="row-btns">
+          <button class="btn primary big" data-a="vote.open" id="vtOpenBtn">▶ Apri votazione</button>
+          <button class="btn big" data-a="vote.close">⏹ Chiudi</button>
+          <button class="btn big" data-a="vote.reveal" data-confirm="Chiudere (se aperta) e mostrare i risultati?">🏁 Rivela risultati</button>
+        </div>
+        <div class="row-btns" style="margin-top:8px">
+          <button class="btn sm" data-a="vote.reset" data-confirm="Azzerare tutti i voti di questa votazione?">↺ Azzera voti</button>
+        </div>
+      </div>
+      <div class="card admin-only" id="tnCard">
+        <h3 style="margin-top:0">🌐 Voto online</h3>
+        <div id="tnStatus" class="engine"></div>
+        <div class="row-btns" style="margin-top:10px">
+          <button class="btn primary" data-a="tunnel.start" id="tnStart">Attiva voto online</button>
+          <button class="btn" data-a="tunnel.stop" id="tnStop">Disattiva</button>
+        </div>
+        <div class="sub" style="color:var(--dim);font-size:13px;margin-top:8px">Così può votare chiunque, anche con i dati mobili. L'indirizzo cambia a ogni attivazione: il QR si aggiorna da solo. Tutto il traffico dei voti passa dalla connessione internet del Mac.</div>
+      </div>
+      <form class="card admin-only" id="vtForm">
+        <h3 style="margin-top:0">Prepara una votazione</h3>
+        <label>Domanda<input name="question" maxlength="90" required placeholder="es. Chi vince la sfida?"></label>
+        <label>Opzioni (una per riga, da 2 a 6)<textarea name="options" rows="4" required placeholder="Squadra Rossa&#10;Squadra Blu"></textarea></label>
+        <label>Come si vota<select name="mode"><option value="phone">📱 Televoto con il telefono (QR)</option><option value="hands">✋ Alzata di mano (conti tu)</option></select></label>
+        <button class="btn primary">Prepara (azzera i voti)</button>
+        <div class="row-btns" style="margin-top:8px"><button class="btn sm" type="button" id="vtFromTeams">Usa le squadre</button><button class="btn sm" type="button" id="vtFromLb">Usa la classifica (prime 6)</button></div>
+      </form>
+      <details class="card admin-only">
+        <summary>Opzioni televoto</summary>
+        <div class="grid2">
+          <label>Risultati<select data-cfg="vote.config:reveal"><option value="live">In diretta (le barre si muovono)</option><option value="final">Nascosti fino a "Rivela"</option></select></label>
+          <label>QR code a schermo<select data-cfg="vote.config:showQr"><option value="true">Mostra mentre è aperta</option><option value="false">Non mostrare</option></select></label>
+          <label>Massimo votanti<input data-cfg="vote.config:maxVoters" type="number" min="1" max="2000" inputmode="numeric"></label>
+          <label>Indirizzo nel QR<select data-cfg="vote.config:joinUrl" id="vtJoin"></select></label>
+        </div>
+        <div class="sub" style="color:var(--dim);font-size:13px">I telefoni del pubblico devono essere sulla stessa rete del Mac. Vedi il README, sezione Televoto.</div>
+        <div id="vtQrPanel" class="qr-panel"></div>
+      </details>
+    </div>
+
+    <!-- RUOTA DELLA FORTUNA -->
+    <div class="tab" data-panel="wh" hidden>
+      <div class="onair-row"><h2>Ruota della fortuna</h2><button class="btn onair admin-only" data-toggle="wheel" data-on="wheel.show" data-off="wheel.hide"></button></div>
+      <div class="card" id="whResult"></div>
+      <div class="card admin-only">
+        <div class="row-btns">
+          <button class="btn primary big" id="whSpin">🎡 Gira!</button>
+          <button class="btn big" data-a="wheel.removeWinner" id="whRemove">✕ Togli l'estratto</button>
+        </div>
+        <label style="margin-top:10px">Durata del giro: <output id="whDurOut">7</output> s<input type="range" id="whDur" min="3" max="15" step="1" value="7"></label>
+      </div>
+      <form class="card" id="whForm">
+        <label>Aggiungi spicchi (uno per riga, massimo 40 in tutto)<textarea name="items" rows="3" placeholder="Mario&#10;Giulia&#10;Luca"></textarea></label>
+        <div class="row-btns">
+          <button class="btn primary">+ Aggiungi</button>
+          <button class="btn admin-only" type="button" data-a="wheel.import" data-source="leaderboard">Dalla classifica</button>
+          <button class="btn admin-only" type="button" data-a="wheel.import" data-source="teams">Dalle squadre</button>
+        </div>
+      </form>
+      <div id="whList" class="list"></div>
+      <details class="card admin-only">
+        <summary>Opzioni ruota</summary>
+        <label>Titolo<input data-cfg="wheel.config:title" maxlength="40"></label>
+        <button class="btn danger" data-a="wheel.clear" data-confirm="Togliere tutti gli spicchi?">Svuota la ruota</button>
+      </details>
+    </div>
+
+    <!-- SOTTOTITOLI -->
+    <div class="tab" data-panel="st" hidden>
+      <div class="onair-row"><h2>Sottotitoli</h2><button class="btn onair admin-only" data-toggle="subtitles" data-on="subs.show" data-off="subs.hide"></button></div>
+      <div class="card"><div id="stEngine" class="engine"></div></div>
+      <div class="card admin-only">
+        <div class="row-btns">
+          <button class="btn big" id="stPause">⏸ Pausa</button>
+          <button class="btn big" data-a="subs.clear">🧹 Svuota schermo</button>
+        </div>
+        <div class="sub" style="color:var(--dim);font-size:13px;margin-top:8px">In pausa i sottotitoli si fermano e non vengono scritti nella trascrizione (utile durante video o musica).</div>
+      </div>
+      <div class="card admin-only">
+        <div class="grid2">
+          <label>Posizione<select data-cfg="subs.config:position"><option value="bottom">In basso</option><option value="center">Al centro</option><option value="top">In alto</option></select></label>
+          <label>Parole per blocco<input data-cfg="subs.config:words" type="number" min="1" max="10" inputmode="numeric"></label>
+          <label>Dimensione testo (px)<input data-cfg="subs.config:size" type="number" min="30" max="160" inputmode="numeric"></label>
+          <label>Sparisce dopo (secondi di silenzio)<input data-cfg="subs.config:hideAfter" type="number" min="1" max="20" inputmode="numeric"></label>
+          <label>Colore parola evidenziata<select data-cfg="subs.config:highlight"><option value="accent">Colore del tema</option><option value="yellow">Giallo</option><option value="green">Verde</option><option value="cyan">Azzurro</option><option value="magenta">Magenta</option><option value="white">Bianco</option></select></label>
+        </div>
+      </div>
+    </div>
+
+    <!-- OROLOGIO -->
+    <div class="tab" data-panel="ck" hidden>
+      <div class="onair-row"><h2>Orologio</h2><button class="btn onair admin-only" data-toggle="clock" data-on="clock.show" data-off="clock.hide"></button></div>
+      <div class="card"><div id="ckDisplay" class="tm-display num">--:--</div></div>
+      <div class="card admin-only">
+        <div class="grid2">
+          <label>Etichetta (vuota = nessuna)<input data-cfg="clock.config:label" maxlength="20" placeholder="es. ORA"></label>
+          <label>Posizione<select data-cfg="clock.config:position"><option value="top-left">In alto a sinistra</option><option value="top-right">In alto a destra</option><option value="bottom-left">In basso a sinistra</option><option value="bottom-right">In basso a destra</option></select></label>
+          <label>Secondi<select data-cfg="clock.config:seconds"><option value="false">Nascosti</option><option value="true">Visibili</option></select></label>
+          <label>Data<select data-cfg="clock.config:date"><option value="false">Nascosta</option><option value="true">Visibile</option></select></label>
+        </div>
+        <div class="sub" style="color:var(--dim);font-size:13px">L'ora è quella del Mac che fa da server. Il timer sta in alto a destra: se li usi insieme, metti l'orologio a sinistra.</div>
+      </div>
+    </div>
+
+    <!-- SFONDI ANIMATI + COPERTURA -->
+    <div class="tab" data-panel="bg" hidden>
+      <h2>Sfondo animato</h2>
+      <div class="bg-prev"><iframe id="bgPrev" title="Anteprima sfondo" loading="lazy"></iframe></div>
+      <div class="card admin-only">
+        <div class="bg-styles" id="bgStyles">
+          <button class="btn" data-a="bg.set" data-style="fluid">Fluido</button>
+          <button class="btn" data-a="bg.set" data-style="scroll">Scorrimento</button>
+          <button class="btn" data-a="bg.set" data-style="aurora">Aurora</button>
+          <button class="btn" data-a="bg.set" data-style="waves">Onde</button>
+          <button class="btn" data-a="bg.set" data-style="bokeh">Bokeh</button>
+        </div>
+        <div class="label-like">Colori (da 2 a 5)<span class="hint" id="bgColorHint"></span></div>
+        <div class="bg-colors" id="bgColors"></div>
+        <div class="grid2">
+          <label>Velocità <output></output><input type="range" min="0" max="1" step="0.01" data-cfg="bg.set:speed"></label>
+          <label>Intensità <output></output><input type="range" min="0" max="1" step="0.01" data-cfg="bg.set:intensity"></label>
+          <label>Angolo (°) <output></output><input type="range" min="0" max="360" step="1" data-cfg="bg.set:angle"></label>
+          <label>Luminosità <output></output><input type="range" min="0.2" max="1.5" step="0.01" data-cfg="bg.set:brightness"></label>
+          <label>Grana <output></output><input type="range" min="0" max="1" step="0.01" data-cfg="bg.set:grain"></label>
+        </div>
+        <div class="sub" style="color:var(--dim);font-size:13px">Intensità: quanto si mescolano i colori (Fluido), quanto sono fitte le bande (Scorrimento), quanto brilla l'aurora, quanto sono alte le onde, quanto sono grandi i cerchi (Bokeh). La grana leggera evita le "scalette" nei gradienti in streaming.</div>
+      </div>
+      <form class="card admin-only" id="bgPresetForm">
+        <h3 style="margin-top:0">Preset</h3>
+        <div class="row-btns"><input name="name" maxlength="30" placeholder="Nome, es. Pausa" style="flex:1;min-width:150px" required><button class="btn primary">Salva l'attuale</button></div>
+        <div id="bgPresets" class="list" style="margin-top:10px"></div>
+        <div class="sub" style="color:var(--dim);font-size:13px">Per avere sfondi diversi in scene diverse, in OBS usa l'indirizzo con il nome del preset: <code>/gfx/background.html?preset=Nome</code>. Quella fonte resta sempre su quel preset, mentre <code>/gfx/background.html</code> segue lo sfondo scelto qui sopra.</div>
+      </form>
+
+      <div class="onair-row" style="margin-top:22px"><h2>Copertura</h2><button class="btn onair admin-only" data-toggle="cover" data-on="cover.show" data-off="cover.hide"></button></div>
+      <div class="card admin-only">
+        <div class="grid2">
+          <label>Titolo<input data-cfg="cover.config:title" maxlength="60" placeholder="es. TORNIAMO SUBITO"></label>
+          <label>Sottotitolo<input data-cfg="cover.config:subtitle" maxlength="90" placeholder="(facoltativo)"></label>
+          <label>Aspetto<select data-cfg="cover.config:look" id="coverLook"></select></label>
+          <label>Transizione<select data-cfg="cover.config:transition"><option value="fade">Dissolvenza</option><option value="wipe">Tendina</option><option value="zoom">Zoom</option><option value="iris">Cerchio</option></select></label>
+          <label>Logo<select data-cfg="cover.config:showLogo"><option value="false">Nascosto</option><option value="true">Visibile</option></select></label>
+          <label>Carica logo (PNG, JPG, WebP o SVG, max 5 MB)<input type="file" id="coverLogoFile" accept="image/png,image/jpeg,image/webp,image/svg+xml"></label>
+        </div>
+        <div id="coverLogoPrev" class="logo-prev"></div>
+        <div class="sub" style="color:var(--dim);font-size:13px">La copertura è l'ultimo livello dell'overlay unico. Se in OBS hai altre fonti sopra l'overlay, aggiungi <code>/gfx/cover.html</code> come fonte separata in cima alla scena. "Nascondi tutto" non tocca la copertura.</div>
+      </div>
+    </div>
+
+    <!-- IMPOSTAZIONI -->
+    <div class="tab" data-panel="set" hidden>
+      <h2>Impostazioni</h2>
+      <div class="card admin-only">
+        <label>Tema grafico<select data-cfg="theme.set:value">
+          <option value="glass">Glass (vetro liquido, glow viola)</option>
+          <option value="neon">Neon (giallo · verde · azzurro)</option>
+          <option value="clean">Clean (chiaro, istituzionale)</option>
+          <option value="cinema">Cinema (nero e oro, titoli con grazie)</option>
+          <option value="oldgame">Old Game (arcade anni '80, pixel)</option>
+          <option value="glitch">Glitch (disturbi RGB, verde acido)</option>
+          <option value="custom">Personalizzato (lo crei tu qui sotto)</option>
+          <optgroup label="I miei temi" id="userThemeOpts"></optgroup>
+        </select></label>
+      </div>
+      <details class="card admin-only" id="customCard">
+        <summary>🎨 Tema personalizzato</summary>
+        <p class="sub" style="color:var(--dim);font-size:13px;margin:8px 0 12px">Le modifiche si vedono subito in onda se il tema attivo è "Personalizzato". Apri l'anteprima 👁 in alto per controllarle.</p>
+        <div class="grid2 colors">
+          <label>Colore principale<input type="color" data-cfg="theme.custom:accent"></label>
+          <label>Secondo colore<input type="color" data-cfg="theme.custom:accent2"></label>
+          <label>Terzo colore<input type="color" data-cfg="theme.custom:accent3"></label>
+          <label>Sfondo dei pannelli<input type="color" data-cfg="theme.custom:panel"></label>
+          <label>Testo<input type="color" data-cfg="theme.custom:text"></label>
+          <label>Testo sopra il colore principale<input type="color" data-cfg="theme.custom:textOnAccent"></label>
+        </div>
+        <div class="grid2">
+          <label>Opacità pannelli <output data-out="panelAlpha"></output><input type="range" min="0" max="1" step="0.05" data-cfg="theme.custom:panelAlpha"></label>
+          <label>Arrotondamento angoli <output data-out="radius"></output><input type="range" min="0" max="60" step="1" data-cfg="theme.custom:radius"></label>
+          <label>Bagliore <output data-out="glow"></output><input type="range" min="0" max="1" step="0.05" data-cfg="theme.custom:glow"></label>
+          <label>Font dei titoli<select data-cfg="theme.custom:font">
+            <option value="inter">Inter (moderno)</option><option value="chakra">Chakra Petch (tecnico)</option>
+            <option value="playfair">Playfair Display (elegante)</option><option value="pixel">Press Start 2P (pixel)</option><option value="vt323">VT323 (terminale)</option></select></label>
+          <label>Titoli<select data-cfg="theme.custom:uppercase"><option value="true">TUTTO MAIUSCOLO</option><option value="false">Come li scrivi</option></select></label>
+        </div>
+        <div class="row-btns">
+          <button class="btn primary" data-a="theme.set" data-value="custom">Usa questo tema</button>
+          <button class="btn" data-a="theme.customReset" data-confirm="Riportare il tema personalizzato ai valori di partenza?">Valori di partenza</button>
+        </div>
+        <div class="row-btns" style="margin-top:8px">
+          <button class="btn" type="button" id="customSave">💾 Salva tra i miei temi</button>
+          <button class="btn" type="button" id="customExport">📤 Esporta come file</button>
+        </div>
+      </details>
+      <div class="card admin-only" id="userThemesCard">
+        <h3 style="margin-top:0">🗂 I miei temi</h3>
+        <div id="userThemesList" class="list"></div>
+        <label style="margin-top:10px">📥 Importa un tema (file .json esportato da LiveGFX, oppure .css scritto a mano o da un'IA)
+          <input type="file" id="themeImport" accept=".json,.css,application/json,text/css"></label>
+        <div class="sub" style="color:var(--dim);font-size:13px">I temi importati stanno in <code>data/themes/</code>: non toccano il codice e si possono eliminare in qualsiasi momento. Se importi un tema con lo stesso nome interno di uno esistente, lo sostituisce.</div>
+      </div>
+      <div class="card">
+        <h3>Indirizzi per OBS (Browser Source 1920×1080)</h3>
+        <div id="gfxLinks" class="links"></div>
+      </div>
+      <div class="card">
+        <h3>Aprire il pannello da altri dispositivi</h3>
+        <div id="addrList" class="links"></div>
+      </div>
+      <div class="card">
+        <div class="row-btns">
+          <button class="btn" id="logoutBtn">Esci</button>
+          <button class="btn danger admin-only" data-a="state.reset" data-confirm="RESET TOTALE: cancella classifica, ospiti, squadre, ticker, televoto e ruota. Sicuro?">Reset totale</button>
+        </div>
+      </div>
+    </div>
+  </main>
+</section>
+
+<!-- Finestra di modifica -->
+<dialog id="editDlg">
+  <form method="dialog" id="editForm">
+    <h3 id="editTitle">Modifica</h3>
+    <div id="editFields"></div>
+    <div class="row-btns end">
+      <button class="btn" value="cancel" formnovalidate>Annulla</button>
+      <button class="btn primary" value="ok">Salva</button>
+    </div>
+  </form>
+</dialog>
+
+<div id="toast" class="toast"></div>
+<script src="/vendor/qrcode.js"></script>
+<script src="panel.js"></script>
+</body>
+</html>

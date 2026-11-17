@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b0e1a">
+<title>Vota</title>
+<style>
+  @font-face { font-family: 'Inter'; font-weight: 400; src: url('/vendor/fonts/inter-latin-400-normal.woff2') format('woff2'); }
+  @font-face { font-family: 'Inter'; font-weight: 800; src: url('/vendor/fonts/inter-latin-800-normal.woff2') format('woff2'); }
+  :root { --bg: #0b0e1a; --card: #151b30; --line: #27304f; --text: #eef2ff; --dim: #8f9bc2; --acc: #FFE14D;
+    --yellow: #FFE14D; --green: #3DFFA0; --cyan: #36D6FF; --magenta: #FF4FD8; --orange: #FF9A3C; --white: #F4F7FF; }
+  * { box-sizing: border-box; }
+  body { margin: 0; min-height: 100vh; background: radial-gradient(circle at 20% 0, #1d2550 0, transparent 55%), var(--bg);
+    color: var(--text); font: 400 17px/1.4 Inter, system-ui, sans-serif; -webkit-tap-highlight-color: transparent; }
+  main { max-width: 520px; margin: 0 auto; padding: 28px 18px calc(28px + env(safe-area-inset-bottom)); }
+  .kicker { font-weight: 800; font-size: 13px; letter-spacing: .18em; text-transform: uppercase; color: var(--acc); }
+  h1 { font-size: 27px; font-weight: 800; line-height: 1.2; margin: 8px 0 22px; }
+  .opts { display: flex; flex-direction: column; gap: 12px; }
+  .opt { position: relative; display: flex; align-items: center; gap: 14px; width: 100%; padding: 16px; text-align: left;
+    background: var(--card); color: var(--text); border: 2px solid var(--line); border-radius: 16px; font: 800 19px Inter, sans-serif;
+    cursor: pointer; overflow: hidden; }
+  .opt .l { flex: none; width: 40px; height: 40px; border-radius: 10px; display: grid; place-items: center; background: var(--c); color: #0b0e1a; }
+  .opt .t { position: relative; flex: 1; }
+  .opt.sel { border-color: var(--c); box-shadow: 0 0 0 3px color-mix(in srgb, var(--c) 35%, transparent); }
+  .opt.mine { border-color: var(--c); }
+  .opt .fill { position: absolute; left: 0; top: 0; bottom: 0; background: var(--c); opacity: .18; }
+  .opt .pc { position: relative; font-size: 17px; }
+  .opt:disabled { cursor: default; }
+  .btn { width: 100%; margin-top: 18px; padding: 17px; border: 0; border-radius: 16px; background: var(--acc); color: #111;
+    font: 800 19px Inter, sans-serif; cursor: pointer; }
+  .btn:disabled { opacity: .4; }
+  .msg { margin-top: 18px; padding: 16px; border-radius: 16px; background: var(--card); border: 1px solid var(--line); text-align: center; }
+  .msg.ok { border-color: var(--green); color: var(--green); font-weight: 800; }
+  .msg.err { border-color: #ff4d6a; color: #ff8fa3; }
+  .big { font-size: 46px; line-height: 1; margin-bottom: 8px; }
+  .dim { color: var(--dim); font-size: 14px; }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<main>
+  <div class="kicker" id="kicker">Televoto</div>
+  <h1 id="q">Caricamento…</h1>
+  <div class="opts" id="opts"></div>
+  <button class="btn" id="send" hidden disabled>Conferma il voto</button>
+  <div class="msg" id="msg" hidden></div>
+  <p class="dim" style="text-align:center;margin-top:26px">Un solo voto per telefono. Il voto non si può cambiare.</p>
+</main>
+<script>
+(function () {
+  const $ = (s) => document.querySelector(s);
+  const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const COL = { yellow: 'var(--yellow)', green: 'var(--green)', cyan: 'var(--cyan)', magenta: 'var(--magenta)', orange: 'var(--orange)', white: 'var(--white)' };
+  let V = null, sel = null, busy = false, key = '';
+
+  function msg(text, cls) { const m = $('#msg'); m.hidden = !text; m.className = 'msg ' + (cls || ''); m.innerHTML = text || ''; }
+
+  function render() {
+    const v = V;
+    if (!v || !v.options.length) { $('#q').textContent = 'Nessuna votazione in corso'; $('#opts').innerHTML = ''; $('#send').hidden = true; msg('Tieni aperta questa pagina: si aggiorna da sola.'); return; }
+    $('#q').textContent = v.question;
+    const total = v.revealed ? v.options.reduce((a, o) => a + (o.count || 0), 0) : 0;
+    const k = JSON.stringify([v.id, v.open, v.revealed, v.myVote, v.full, v.mode, sel, v.options]);
+    if (k === key) return;
+    key = k;
+    const canVote = v.mode === 'phone' && v.open && !v.myVote && !v.full;
+    $('#opts').innerHTML = v.options.map((o, i) => {
+      const pct = total ? Math.round((o.count / total) * 100) : 0;
+      return `<button class="opt${sel === o.id ? ' sel' : ''}${v.myVote === o.id ? ' mine' : ''}" data-id="${o.id}" style="--c:${COL[o.color]}" ${canVote ? '' : 'disabled'}>
+        ${v.revealed ? `<span class="fill" style="width:${pct}%"></span>` : ''}
+        <span class="l">${'ABCDEF'[i]}</span><span class="t">${esc(o.text)}</span>${v.revealed ? `<span class="pc">${pct}%</span>` : ''}</button>`;
+    }).join('');
+    $('#send').hidden = !canVote;
+    $('#send').disabled = !sel;
+    const mine = v.options.find((o) => o.id === v.myVote);
+    if (v.mode === 'hands') msg('<div class="big">✋</div>In questa votazione si vota per <b>alzata di mano</b>.');
+    else if (mine) msg(`<div class="big">✓</div>Voto registrato: ${esc(mine.text)}`, 'ok');
+    else if (v.revealed) msg('Votazione conclusa: ecco i risultati.');
+    else if (v.open && v.full) msg('È stato raggiunto il numero massimo di votanti.', 'err');
+    else if (!v.open) msg('La votazione è chiusa o non ancora aperta. La pagina si aggiorna da sola.');
+    else msg('');
+  }
+
+  // Controlli leggeri: il telefono chiede "novità?" più spesso solo quando serve,
+  // e smette del tutto se lo schermo è spento o la pagina è in secondo piano.
+  // Con "no-cache" il browser usa l'ETag: se non è cambiato nulla arriva una risposta vuota (304).
+  let timer = null;
+  function nextDelay() {
+    if (!V) return 5000;
+    if (V.mode === 'phone' && V.open && !V.myVote && !V.full) return 3000;   // può votare: deve accorgersi se chiude
+    if (V.myVote && !V.revealed) return 12000;                               // ha votato: aspetta i risultati
+    if (V.revealed || V.mode === 'hands') return 15000;
+    return 4000;                                                             // aspetta che si apra
+  }
+  function schedule(ms) { clearTimeout(timer); if (!document.hidden) timer = setTimeout(poll, ms); }
+  async function poll() {
+    try {
+      const r = await fetch('/api/vote', { cache: 'no-cache' });
+      const v = await r.json();
+      if (!V || V.id !== v.id) sel = null;
+      V = v; render();
+      schedule(nextDelay());
+    } catch { msg('Connessione persa, riprovo…', 'err'); key = ''; schedule(5000); }
+  }
+  document.addEventListener('visibilitychange', () => { if (document.hidden) clearTimeout(timer); else poll(); });
+
+  $('#opts').addEventListener('click', (e) => {
+    const b = e.target.closest('.opt'); if (!b || b.disabled) return;
+    sel = b.dataset.id; render();
+  });
+  $('#send').addEventListener('click', async () => {
+    if (!sel || busy) return;
+    busy = true; $('#send').disabled = true;
+    try {
+      const r = await fetch('/api/vote', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ voteId: V.id, optionId: sel }) });
+      const d = await r.json();
+      if (d.vote) V = d.vote;
+      key = ''; render(); schedule(nextDelay());
+      if (!d.ok) msg(esc(d.error || 'Voto non registrato'), 'err');
+    } catch { msg('Voto non inviato: controlla la connessione e riprova.', 'err'); $('#send').disabled = false; }
+    busy = false;
+  });
+
+  poll();
+})();
+</script>
+</body>
+</html>

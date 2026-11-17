@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<title>LiveGFX · Televoto</title>
+<link rel="stylesheet" href="common.css">
+<link rel="stylesheet" href="glass.css">
+<link rel="stylesheet" href="themes.css">
+<style>
+  #vt { position: absolute; inset: 0; display: flex; gap: 28px; align-items: center; justify-content: center; }
+  #vt .card { align-self: center; }
+  #vt .card { position: relative; background: var(--panel); border-radius: var(--radius); }
+  #main { width: 1160px; padding: 34px 44px 38px; }
+  #vt.noqr #main { width: 1300px; }
+  .top { display: flex; align-items: center; justify-content: space-between; gap: 20px; margin-bottom: 8px; }
+  .status { display: inline-flex; align-items: center; gap: 10px; padding: 7px 14px; border-radius: var(--radius);
+    font: 700 20px var(--font-display); letter-spacing: .16em; text-transform: uppercase;
+    background: var(--panel-2); color: var(--text); }
+  .status .dot { width: 12px; height: 12px; border-radius: 50%; background: var(--text-dim); }
+  #vt.open .status .dot { background: var(--green); box-shadow: 0 0 12px var(--green); }
+  #vt.closed .status .dot { background: var(--danger); }
+  #vt.revealed .status { background: var(--accent); color: var(--text-on-accent); }
+  #vt.revealed .status .dot { background: var(--text-on-accent); }
+  .total { font: 700 24px var(--font-display); color: var(--text-dim); letter-spacing: .08em; text-transform: uppercase; }
+  .total b { color: var(--text); font-size: 34px; margin-right: 6px; }
+  .question { font-size: 58px; line-height: 1.08; color: var(--accent); margin: 14px 0 26px; }
+  .question::after { content: ''; display: block; height: 3px; margin-top: 22px;
+    background: linear-gradient(90deg, var(--yellow), var(--green), var(--cyan)); }
+  .opts { display: flex; flex-direction: column; gap: 14px; }
+  .opt { position: relative; display: grid; grid-template-columns: 64px 1fr 210px; align-items: center; height: 82px;
+    border-radius: var(--radius); overflow: hidden; background: var(--panel-2); }
+  .opt .fill { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: var(--c); opacity: .9; transform-origin: 0 50%; }
+  [data-theme="neon"] .opt .fill, [data-theme="glitch"] .opt .fill { box-shadow: 0 0 26px var(--c-glow); }
+  .opt .letter { position: relative; z-index: 1; display: flex; align-items: center; justify-content: center; height: 100%;
+    font: 700 34px var(--font-display); color: var(--text-on-accent); background: var(--c); }
+  .opt .text { position: relative; z-index: 1; padding: 0 22px; font: 700 34px var(--font-display); text-transform: var(--display-case, uppercase);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text);
+    text-shadow: 0 1px 8px rgba(0,0,0,.45); }
+  .opt .val { position: relative; z-index: 1; display: flex; align-items: baseline; justify-content: flex-end; gap: 10px; padding-right: 24px;
+    color: var(--text); text-shadow: 0 1px 8px rgba(0,0,0,.45); }
+  .opt .pct { font: 700 44px var(--font-display); }
+  .opt .cnt { font: 600 20px var(--font-body); color: var(--text-dim); min-width: 52px; text-align: right; }
+  .opt.win { box-shadow: 0 0 0 3px var(--c), 0 0 40px var(--c-glow); }
+  .opt.lose .fill { opacity: .45; }
+  .hiddenres .opt .pct, .hiddenres .opt .cnt { visibility: hidden; }
+  .hiddenres .opt .val::after { content: '?'; font: 700 44px var(--font-display); color: var(--text-dim); }
+
+  #qr { width: 380px; padding: 30px 30px 26px; display: flex; flex-direction: column; align-items: center; text-align: center; }
+  #vt.noqr #qr { display: none; }
+  #qr .head { font: 700 30px var(--font-display); text-transform: uppercase; letter-spacing: .06em; color: var(--accent); margin-bottom: 18px; }
+  #qr .code { width: 300px; height: 300px; padding: 14px; background: #fff; border-radius: calc(var(--radius) * .6); }
+  #qr .code svg { width: 100%; height: 100%; display: block; }
+  #qr .url { margin-top: 16px; font: 600 21px var(--font-body); color: var(--text); word-break: break-all; }
+  #qr .hint { margin-top: 6px; font: 400 17px var(--font-body); color: var(--text-dim); }
+</style>
+</head>
+<body>
+<div id="vt" class="hidden-init">
+  <div class="card neon-edge" id="main">
+    <div class="top"><div class="status"><span class="dot"></span><span id="status"></span></div><div class="total" id="total"></div></div>
+    <div class="question display glow-accent" id="question"></div>
+    <div class="opts" id="opts"></div>
+  </div>
+  <div class="card neon-edge" id="qr">
+    <div class="head">Vota ora</div>
+    <div class="code" id="code"></div>
+    <div class="url" id="url"></div>
+    <div class="hint">Inquadra il QR con la fotocamera.<br>Un voto per telefono.</div>
+  </div>
+</div>
+<script src="../vendor/gsap.min.js"></script>
+<script src="../vendor/qrcode.js"></script>
+<script src="common.js"></script>
+<script>
+const vt = document.getElementById('vt');
+const optsEl = document.getElementById('opts');
+const esc = LiveGFX.esc;
+let visible = false, structKey = '', lastQrUrl = '', defaultUrl = '', onlineUrl = '';
+LiveGFX.onMessage('tunnel', (t) => { onlineUrl = t.status === 'online' && t.url ? t.url : ''; if (last) update(last); });
+const shown = {};          // id -> percentuale mostrata (per animare)
+let wasRevealed = false;
+
+fetch('/api/info').then((r) => r.json()).then((info) => {
+  const lan = info.addresses.find((a) => !a.tailscale) || info.addresses[0];
+  if (lan) defaultUrl = `http://${lan.ip}:${info.port}/v`;
+  if (last) update(last);
+}).catch(() => {});
+
+function drawQr(url) {
+  if (url === lastQrUrl) return;
+  lastQrUrl = url;
+  const q = qrcode(0, 'M'); q.addData(url); q.make();
+  document.getElementById('code').innerHTML = q.createSvgTag({ cellSize: 8, margin: 0, scalable: true });
+  document.getElementById('url').textContent = url.replace(/^https?:\/\//, '');
+}
+
+function build(v) {
+  optsEl.innerHTML = v.options.map((o, i) => `<div class="opt c-${o.color}" data-id="${o.id}">
+    <div class="fill"></div><div class="letter">${'ABCDEF'[i]}</div>
+    <div class="text">${esc(o.text)}</div>
+    <div class="val num"><span class="pct">0%</span><span class="cnt">0</span></div></div>`).join('');
+  for (const o of v.options) shown[o.id] = 0;
+}
+
+function update(v) {
+  const total = v.options.reduce((a, o) => a + o.count, 0);
+  const hideResults = v.reveal === 'final' && !v.revealed;
+  vt.classList.toggle('open', v.open);
+  vt.classList.toggle('closed', !v.open && !v.revealed && v.closedAt > 0);
+  vt.classList.toggle('revealed', v.revealed);
+  const showQr = v.mode === 'phone' && v.showQr && v.open;
+  vt.classList.toggle('noqr', !showQr);
+  if (showQr) drawQr(v.joinUrl || onlineUrl || defaultUrl || location.origin + '/v');
+  document.getElementById('status').textContent =
+    v.revealed ? 'Risultati' : v.open ? (v.mode === 'hands' ? 'Alzata di mano' : 'Televoto aperto') : v.closedAt ? 'Votazione chiusa' : 'In preparazione';
+  document.getElementById('total').innerHTML = `<b class="num">${total}</b>${total === 1 ? 'voto' : 'voti'}`;
+  optsEl.classList.toggle('hiddenres', hideResults);
+
+  const max = Math.max(...v.options.map((o) => o.count));
+  const finalNow = v.revealed && !wasRevealed;
+  v.options.forEach((o, i) => {
+    const el = optsEl.querySelector(`[data-id="${o.id}"]`);
+    if (!el) return;
+    const pct = total ? Math.round((o.count / total) * 100) : 0;
+    const target = hideResults ? 0 : pct;
+    const delay = finalNow ? 0.35 * i : 0;
+    gsap.to(el.querySelector('.fill'), { width: target + '%', duration: finalNow ? 1.4 : 0.8, delay, ease: 'power3.out' });
+    const obj = { n: shown[o.id] ?? 0 };
+    gsap.to(obj, { n: pct, duration: finalNow ? 1.4 : 0.8, delay, ease: 'power2.out',
+      onUpdate: () => { el.querySelector('.pct').textContent = Math.round(obj.n) + '%'; } });
+    shown[o.id] = pct;
+    el.querySelector('.cnt').textContent = o.count;
+    const win = v.revealed && total > 0 && o.count === max;
+    el.classList.toggle('win', win);
+    el.classList.toggle('lose', v.revealed && total > 0 && !win);
+    if (win && finalNow) gsap.fromTo(el, { scale: 1 }, { scale: 1.035, duration: 0.35, yoyo: true, repeat: 3, delay: 0.35 * v.options.length + 0.9, ease: 'sine.inOut' });
+  });
+  wasRevealed = v.revealed;
+}
+
+let last = null;
+LiveGFX.onState((s) => {
+  const v = s.vote;
+  last = v;
+  document.getElementById('question').textContent = v.question;
+  const key = v.id + v.options.map((o) => o.id + o.text).join('|');
+  if (key !== structKey) { structKey = key; wasRevealed = false; build(v); }
+  update(v);
+
+  if (v.visible && !visible) {
+    visible = true;
+    gsap.killTweensOf(vt);
+    gsap.set(vt, { visibility: 'visible' });
+    gsap.timeline()
+      .fromTo(vt, { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.6, ease: 'power4.out' })
+      .from('#question', { y: 30, opacity: 0, duration: 0.5, ease: 'power3.out' }, '-=0.3')
+      .from('.opt', { x: -60, opacity: 0, stagger: 0.08, duration: 0.5, ease: 'power3.out' }, '-=0.3')
+      .from('#qr', { x: 60, opacity: 0, duration: 0.5, ease: 'power3.out' }, '<');
+  } else if (!v.visible && visible) {
+    visible = false;
+    gsap.killTweensOf(vt);
+    gsap.to(vt, { opacity: 0, y: 40, duration: 0.4, ease: 'power3.in', onComplete: () => gsap.set(vt, { visibility: 'hidden' }) });
+  }
+});
+</script>
+</body>
+</html>

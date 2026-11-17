@@ -1,0 +1,9 @@
+# CORREZIONI AUTOMATICHE
+# Una regola per riga:   parola sbagliata => parola giusta
+# Valgono sia a schermo sia nel file della trascrizione.
+# Le righe che iniziano con # sono ignorate. Si caricano all'avvio del programma.
+#
+# Esempi (togli il # davanti per attivarli):
+# one light => OneLight
+# rappresentanza d'istituto => Rappresentanza d'Istituto
+# parolaccia => ***

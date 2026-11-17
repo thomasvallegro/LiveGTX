@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<title>LiveGFX · Ruota della fortuna</title>
+<link rel="stylesheet" href="common.css">
+<link rel="stylesheet" href="glass.css">
+<link rel="stylesheet" href="themes.css">
+<style>
+  #wh { position: absolute; inset: 0; }
+  #wh .title { position: absolute; top: 26px; left: 0; right: 0; text-align: center; font-size: 56px; color: var(--accent); }
+  #stage { position: absolute; left: 50%; top: 196px; width: 800px; height: 800px; margin-left: -400px; }
+  #stage .ring { position: absolute; inset: -14px; border-radius: 50%; background: var(--panel);
+    box-shadow: 0 0 0 3px var(--accent2-edge), 0 0 50px var(--accent2-glow), 0 30px 80px rgba(0,0,0,.45); }
+  canvas { position: absolute; inset: 0; width: 800px; height: 800px; }
+  .hub { position: absolute; left: 50%; top: 50%; width: 110px; height: 110px; margin: -55px 0 0 -55px; border-radius: 50%;
+    background: linear-gradient(var(--panel), var(--panel)), #0B0E18; box-shadow: 0 0 0 4px var(--accent), 0 0 30px var(--accent-glow); }
+  .pointer { position: absolute; left: 50%; top: -46px; width: 64px; height: 84px; margin-left: -32px; transform-origin: 50% 20%; z-index: 2;
+    filter: drop-shadow(0 6px 10px rgba(0,0,0,.5)); }
+  .pointer svg { width: 100%; height: 100%; display: block; }
+  .pointer path { fill: var(--accent); stroke: var(--text-on-accent); stroke-width: 3; }
+  #win { position: absolute; left: 0; right: 0; top: 510px; display: flex; justify-content: center; visibility: hidden; z-index: 3; }
+  #win .box { background: var(--panel); border-radius: var(--radius); padding: 22px 60px 26px; text-align: center; min-width: 700px;
+    box-shadow: 0 0 0 3px var(--accent), 0 0 60px var(--accent-glow), 0 30px 80px rgba(0,0,0,.5); }
+  #win .k { font: 700 24px var(--font-display); letter-spacing: .3em; text-transform: uppercase; color: var(--accent-2); }
+  #win .n { font-size: 92px; line-height: 1.05; margin-top: 6px; color: var(--text); white-space: nowrap; }
+  .empty { position: absolute; left: 0; right: 0; top: 520px; text-align: center; font: 600 30px var(--font-body); color: var(--text-dim); }
+</style>
+</head>
+<body>
+<div id="wh" class="hidden-init">
+  <div class="title display glow-accent" id="title"></div>
+  <div id="stage">
+    <div class="ring"></div>
+    <canvas id="cv" width="1680" height="1680"></canvas>
+    <div class="hub"></div>
+    <div class="pointer" id="pointer"><svg viewBox="0 0 64 84"><path d="M32 82 L6 22 A28 28 0 1 1 58 22 Z"/></svg></div>
+  </div>
+  <div class="empty" id="empty">Aggiungi almeno 2 spicchi dal pannello</div>
+  <div id="win"><div class="box"><div class="k">Estratto</div><div class="n display glow-accent" id="winName"></div></div></div>
+</div>
+<script src="../vendor/gsap.min.js"></script>
+<script src="common.js"></script>
+<script>
+const wh = document.getElementById('wh');
+const cv = document.getElementById('cv');
+const ctx = cv.getContext('2d');
+const winEl = document.getElementById('win');
+const R = 840;   // raggio in pixel del canvas (doppia risoluzione)
+let W = null, visible = false, raf = 0, lastSeg = -1, shownWinFor = null, styleKey = '';
+
+const cssVar = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+function lum(color) {   // luminosità approssimata di un colore CSS, per scegliere testo chiaro o scuro
+  ctx.fillStyle = color; const c = ctx.fillStyle;  // il canvas normalizza in #rrggbb o rgba()
+  let r, g, b;
+  if (c[0] === '#') { const n = parseInt(c.slice(1), 16); r = n >> 16 & 255; g = n >> 8 & 255; b = n & 255; }
+  else { [r, g, b] = c.match(/[\d.]+/g).map(Number); }
+  return (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+}
+function palette() {
+  return [cssVar('--accent'), cssVar('--accent-2'), cssVar('--accent-3'), cssVar('--magenta') || '#FF4FD8', cssVar('--orange') || '#FF9A3C', cssVar('--white') || '#fff']
+    .filter(Boolean);
+}
+
+const easeOut = (p) => 1 - Math.pow(1 - p, 4);
+function angleNow() {
+  const sp = W && W.spin;
+  if (!sp) return 0;
+  const t = LiveGFX.serverNow() - sp.at;
+  if (t <= 0) return sp.from;
+  const p = Math.min(1, t / sp.duration);
+  return sp.from + (sp.to - sp.from) * easeOut(p);
+}
+
+function draw() {
+  const items = W ? W.items : [];
+  ctx.clearRect(0, 0, cv.width, cv.height);
+  document.getElementById('empty').style.display = items.length < 2 ? '' : 'none';
+  if (!items.length) return;
+  const n = items.length, seg = (Math.PI * 2) / n, ang = (angleNow() * Math.PI) / 180;
+  const cols = palette();
+  const font = cssVar('--font-display') || 'Inter, sans-serif';
+  const winnerIdx = W.spin && LiveGFX.serverNow() >= W.spin.at + W.spin.duration ? W.spin.index : -1;
+  ctx.save();
+  ctx.translate(R, R);
+  ctx.rotate(ang);
+  for (let i = 0; i < n; i++) {
+    // con un numero dispari di spicchi evito due colori uguali vicini tra ultimo e primo
+    const col = cols[(n % cols.length === 1 && i === n - 1) ? 1 : i % Math.min(cols.length, n > 3 ? 4 : 3)];
+    const a0 = -Math.PI / 2 + i * seg, a1 = a0 + seg;
+    ctx.beginPath(); ctx.moveTo(0, 0); ctx.arc(0, 0, R - 4, a0, a1); ctx.closePath();
+    ctx.fillStyle = col; ctx.globalAlpha = winnerIdx >= 0 && winnerIdx !== i ? 0.45 : 1; ctx.fill();
+    ctx.globalAlpha = 1;
+    ctx.strokeStyle = 'rgba(0,0,0,.35)'; ctx.lineWidth = 4; ctx.stroke();
+    // testo radiale
+    ctx.save();
+    ctx.rotate(a0 + seg / 2);
+    ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+    ctx.fillStyle = lum(col) > 0.6 ? '#0B0E18' : '#FFFFFF';
+    let size = Math.min(64, Math.max(24, seg * R * 0.42));
+    const text = (cssVar('--display-case') === 'none' ? items[i].text : items[i].text.toUpperCase());
+    ctx.font = `700 ${size}px ${font}`;
+    const maxW = R * 0.68;
+    while (ctx.measureText(text).width > maxW && size > 18) { size -= 2; ctx.font = `700 ${size}px ${font}`; }
+    ctx.fillText(text, R - 46, 2);
+    ctx.restore();
+  }
+  ctx.restore();
+  // bordo esterno con "pioli"
+  ctx.save(); ctx.translate(R, R);
+  for (let i = 0; i < n; i++) {
+    const a = -Math.PI / 2 + i * seg + ang;
+    ctx.beginPath(); ctx.arc(Math.cos(a) * (R - 22), Math.sin(a) * (R - 22), 9, 0, Math.PI * 2);
+    ctx.fillStyle = '#fff'; ctx.shadowColor = 'rgba(0,0,0,.5)'; ctx.shadowBlur = 6; ctx.fill();
+  }
+  ctx.restore();
+
+  // la freccia "scatta" quando passa un piolo
+  const under = Math.floor((((-angleNow()) % 360 + 360) % 360) / (360 / n));
+  if (lastSeg !== -1 && under !== lastSeg && W.spin && LiveGFX.serverNow() < W.spin.at + W.spin.duration) {
+    gsap.fromTo('#pointer', { rotation: -14 }, { rotation: 0, duration: 0.25, ease: 'back.out(3)', overwrite: true });
+  }
+  lastSeg = under;
+}
+
+function loop() {
+  draw();
+  const sp = W && W.spin;
+  const running = sp && LiveGFX.serverNow() < sp.at + sp.duration;
+  if (sp && !running && shownWinFor !== sp.id && visible) showWinner(sp);
+  raf = running ? requestAnimationFrame(loop) : 0;
+}
+function kick() { if (!raf) raf = requestAnimationFrame(loop); }
+
+function showWinner(sp) {
+  shownWinFor = sp.id;
+  document.getElementById('winName').textContent = sp.text;
+  LiveGFX.fitText(document.getElementById('winName'), 92, 40);
+  gsap.killTweensOf(winEl);
+  gsap.set(winEl, { visibility: 'visible' });
+  gsap.fromTo(winEl, { scale: 0.6, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.6, ease: 'back.out(2)' });
+  draw();
+}
+function hideWinner() {
+  if (winEl.style.visibility !== 'visible') return;
+  gsap.to(winEl, { opacity: 0, duration: 0.25, onComplete: () => gsap.set(winEl, { visibility: 'hidden' }) });
+}
+
+document.fonts.ready.then(() => kick());
+
+LiveGFX.onState((s) => {
+  const prevSpin = W && W.spin && W.spin.id;
+  W = s.wheel;
+  document.getElementById('title').textContent = W.title;
+  const sp = W.spin;
+  if (!sp || sp.id !== prevSpin) {
+    // nuovo giro (o ruota cambiata): via il vincitore precedente
+    hideWinner();
+    shownWinFor = null;
+  }
+  const key = s.theme + JSON.stringify(s.customTheme);
+  if (key !== styleKey) { styleKey = key; requestAnimationFrame(() => kick()); }
+  kick();
+
+  if (W.visible && !visible) {
+    visible = true;
+    gsap.killTweensOf(wh);
+    gsap.set(wh, { visibility: 'visible' });
+    if (W.spin) { shownWinFor = null; gsap.delayedCall(0.9, kick); }   // riaprendo la ruota, ricompare l'ultimo estratto
+    gsap.timeline()
+      .fromTo('#stage', { scale: 0.3, rotation: -120, opacity: 0 }, { scale: 1, rotation: 0, opacity: 1, duration: 0.9, ease: 'back.out(1.4)' })
+      .fromTo('#title', { y: -40, opacity: 0 }, { y: 0, opacity: 1, duration: 0.5, ease: 'power3.out' }, '-=0.5');
+  } else if (!W.visible && visible) {
+    visible = false;
+    gsap.killTweensOf(wh);
+    gsap.timeline()
+      .to('#stage', { scale: 0.3, opacity: 0, duration: 0.45, ease: 'power3.in' })
+      .to(['#title', '#win'], { opacity: 0, duration: 0.3 }, '<')
+      .set(wh, { visibility: 'hidden' })
+      .set(['#title', '#win'], { opacity: 1 })
+      .set('#win', { visibility: 'hidden' });
+  }
+});
+</script>
+</body>
+</html>

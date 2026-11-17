@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<title>LiveGFX · Annuncio</title>
+<link rel="stylesheet" href="common.css">
+<link rel="stylesheet" href="glass.css">
+<link rel="stylesheet" href="themes.css">
+<style>
+  #an { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+  .backdrop { position: absolute; inset: 0; background: radial-gradient(ellipse at center, rgba(5,7,16,.88) 0, rgba(5,7,16,.72) 55%, rgba(5,7,16,.4) 100%); }
+  [data-theme="clean"] .backdrop { background: radial-gradient(ellipse at center, rgba(255,255,255,.95) 0, rgba(240,244,252,.85) 60%, rgba(240,244,252,.5) 100%); }
+  .content { position: relative; max-width: 1600px; padding: 0 80px; }
+  .line { height: 3px; width: 900px; margin: 0 auto; background: linear-gradient(90deg, transparent, var(--cyan), var(--green), var(--yellow), transparent);
+    box-shadow: 0 0 18px var(--accent2-glow); }
+  .kicker { font: 700 34px var(--font-display); letter-spacing: .4em; text-transform: uppercase; color: var(--accent-2); margin: 34px 0 10px; }
+  .title { font-size: 150px; line-height: 1; color: var(--accent); white-space: nowrap; }
+  .subtitle { font: 400 40px var(--font-body); color: var(--text); opacity: .85; margin: 22px 0 34px; }
+</style>
+</head>
+<body>
+<div id="an" class="hidden-init">
+  <div class="backdrop"></div>
+  <div class="content">
+    <div class="line" id="l1"></div>
+    <div class="kicker" id="kicker"></div>
+    <div class="title display glow-accent" id="title"></div>
+    <div class="subtitle" id="subtitle"></div>
+    <div class="line" id="l2"></div>
+  </div>
+</div>
+<script src="../vendor/gsap.min.js"></script>
+<script src="common.js"></script>
+<script>
+const an = document.getElementById('an');
+let onAir = null, tl = null;
+
+function fill(A) {
+  const k = document.getElementById('kicker'), s = document.getElementById('subtitle'), t = document.getElementById('title');
+  k.textContent = A.kicker; k.style.display = A.kicker ? '' : 'none';
+  s.textContent = A.subtitle; s.style.display = A.subtitle ? '' : 'none';
+  t.style.fontSize = '150px';
+  LiveGFX.splitChars(t, A.title);
+  // titoli lunghi: riduce la dimensione per stare nello schermo
+  let size = 150;
+  while (t.scrollWidth > 1700 && size > 60) { size -= 6; t.style.fontSize = size + 'px'; }
+}
+function animIn() {
+  tl?.kill();
+  gsap.set(an, { visibility: 'visible', opacity: 1 });
+  tl = gsap.timeline()
+    .fromTo('.backdrop', { opacity: 0 }, { opacity: 1, duration: 0.5 })
+    .fromTo(['#l1', '#l2'], { scaleX: 0 }, { scaleX: 1, duration: 0.8, ease: 'power4.inOut' }, '-=0.3')
+    .fromTo('#kicker', { opacity: 0, letterSpacing: '1em' }, { opacity: 1, letterSpacing: '0.4em', duration: 0.8, ease: 'power3.out' }, '-=0.5')
+    .fromTo('#title .ch', { opacity: 0, y: 60, rotateX: -80, filter: 'blur(8px)' },
+      { opacity: 1, y: 0, rotateX: 0, filter: 'blur(0px)', duration: 0.7, stagger: 0.035, ease: 'power3.out' }, '-=0.5')
+    .fromTo('#subtitle', { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.6 }, '-=0.3')
+    .to('#title', { scale: 1.02, duration: 2.5, repeat: -1, yoyo: true, ease: 'sine.inOut' });
+}
+function animOut(then) {
+  tl?.kill();
+  tl = gsap.timeline({ onComplete: then })
+    .to('.content', { scale: 1.08, opacity: 0, filter: 'blur(10px)', duration: 0.45, ease: 'power2.in' })
+    .to('.backdrop', { opacity: 0, duration: 0.35 }, '-=0.2')
+    .set(an, { visibility: 'hidden' })
+    .set('.content', { scale: 1, opacity: 1, filter: 'blur(0px)' })
+    .set('#title', { scale: 1 });
+}
+
+LiveGFX.onState((s) => {
+  const A = s.announce;
+  const key = A.visible ? String(A.shownAt) : null;
+  if (key === onAir) return;
+  const wasOn = onAir !== null;
+  onAir = key;
+  if (!key) { if (wasOn) animOut(); return; }
+  if (wasOn) animOut(() => { fill(A); animIn(); });
+  else { fill(A); animIn(); }
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<title>LiveGFX · Timer</title>
+<link rel="stylesheet" href="common.css">
+<link rel="stylesheet" href="glass.css">
+<link rel="stylesheet" href="themes.css">
+<style>
+  #tm { position: absolute; top: 44px; right: 110px; display: flex; align-items: stretch; background: var(--panel); border-radius: var(--radius); overflow: hidden; }
+  .label { display: flex; align-items: center; padding: 0 18px; font: 700 20px var(--font-display); letter-spacing: .2em;
+    text-transform: uppercase; color: var(--text-on-accent); background: var(--accent-2); writing-mode: horizontal-tb; }
+  [data-theme="clean"] .label { color: #fff; }
+  .time { font: 700 64px var(--font-display); padding: 6px 26px; min-width: 230px; text-align: center; color: var(--text); }
+  #tm.warn .time { color: var(--danger); text-shadow: 0 0 18px rgba(255,77,106,calc(.8 * var(--glow))); }
+  #tm.warn .label { background: var(--danger); color: #fff; }
+  #tm.done .time { color: var(--danger); }
+  .progress { position: absolute; left: 0; bottom: 0; height: 4px; background: var(--accent); transform-origin: 0 50%; width: 100%; }
+  #tm.warn .progress { background: var(--danger); }
+</style>
+</head>
+<body>
+<div id="tm" class="neon-edge hidden-init">
+  <div class="label" id="label"></div>
+  <div class="time num" id="time">00:00</div>
+  <div class="progress" id="progress"></div>
+</div>
+<script src="../vendor/gsap.min.js"></script>
+<script src="common.js"></script>
+<script>
+const tm = document.getElementById('tm');
+const timeEl = document.getElementById('time');
+const progress = document.getElementById('progress');
+let T = null, visible = false, pulse = null, lastFinished = 0;
+
+function fmt(ms) {
+  const total = Math.max(0, Math.ceil(ms / 1000));
+  const h = Math.floor(total / 3600), m = Math.floor((total % 3600) / 60), s = total % 60;
+  const mm = String(m).padStart(2, '0'), ss = String(s).padStart(2, '0');
+  return h ? `${h}:${mm}:${ss}` : `${mm}:${ss}`;
+}
+
+function tick() {
+  requestAnimationFrame(tick);
+  if (!T) return;
+  const now = LiveGFX.serverNow();
+  const elapsed = T.elapsedBefore + (T.running ? now - T.startedAt : 0);
+  if (T.mode === 'countdown') {
+    const left = Math.max(0, T.duration - elapsed);
+    timeEl.textContent = fmt(left);
+    progress.style.transform = `scaleX(${left / T.duration})`;
+    const warn = left > 0 && left <= 10000;
+    tm.classList.toggle('warn', warn || left === 0);
+    tm.classList.toggle('done', left === 0);
+    if (warn && T.running && !pulse) pulse = gsap.to(timeEl, { scale: 1.08, duration: 0.5, repeat: -1, yoyo: true, ease: 'sine.inOut' });
+    if ((!warn || !T.running) && pulse) { pulse.kill(); pulse = null; gsap.set(timeEl, { scale: 1 }); }
+  } else {
+    timeEl.textContent = fmt(elapsed - 999); // cronometro: secondi interi trascorsi (arrotonda per difetto)
+    progress.style.transform = 'scaleX(0)';
+    tm.classList.remove('warn', 'done');
+  }
+}
+requestAnimationFrame(tick);
+
+LiveGFX.onState((s) => {
+  T = s.timer;
+  document.getElementById('label').textContent = T.label || 'TEMPO';
+  // Tempo scaduto: lampeggio
+  if (T.finishedAt && T.finishedAt !== lastFinished) {
+    lastFinished = T.finishedAt;
+    if (visible) gsap.fromTo(tm, { opacity: 0.2 }, { opacity: 1, duration: 0.18, repeat: 7, yoyo: true });
+  }
+  if (T.visible && !visible) {
+    visible = true;
+    gsap.killTweensOf(tm);
+    gsap.set(tm, { visibility: 'visible' });
+    gsap.fromTo(tm, { x: 420, opacity: 0 }, { x: 0, opacity: 1, duration: 0.7, ease: 'power4.out' });
+  } else if (!T.visible && visible) {
+    visible = false;
+    gsap.killTweensOf(tm);
+    gsap.to(tm, { x: 420, opacity: 0, duration: 0.45, ease: 'power3.in', onComplete: () => gsap.set(tm, { visibility: 'hidden' }) });
+  }
+});
+</script>
+</body>
+</html>

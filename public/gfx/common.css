@@ -1,0 +1,92 @@
+/* Stile condiviso da tutte le grafiche. Temi tramite variabili CSS. */
+@font-face { font-family: 'Chakra Petch'; font-weight: 500; src: url('../vendor/fonts/chakra-petch-latin-500-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Chakra Petch'; font-weight: 700; src: url('../vendor/fonts/chakra-petch-latin-700-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Inter'; font-weight: 400; src: url('../vendor/fonts/inter-latin-400-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Inter'; font-weight: 600; src: url('../vendor/fonts/inter-latin-600-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Inter'; font-weight: 800; src: url('../vendor/fonts/inter-latin-800-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Playfair Display'; font-weight: 700; src: url('../vendor/fonts/playfair-display-latin-700-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Playfair Display'; font-weight: 900; src: url('../vendor/fonts/playfair-display-latin-900-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Press Start 2P'; font-weight: 400 900; src: url('../vendor/fonts/press-start-2p-latin-400-normal.woff2') format('woff2'); }
+@font-face { font-family: 'VT323'; font-weight: 400 900; src: url('../vendor/fonts/vt323-latin-400-normal.woff2') format('woff2'); }
+
+/* TEMA NEON (default): giallo – verde – azzurro */
+:root, [data-theme="neon"] {
+  --yellow: #FFE14D; --green: #3DFFA0; --cyan: #36D6FF; --magenta: #FF4FD8; --orange: #FF9A3C; --white: #F4F7FF;
+  --accent: var(--yellow); --accent-2: var(--cyan); --accent-3: var(--green);
+  --danger: #FF4D6A;
+  --panel: rgba(8, 11, 24, 0.86);
+  --panel-2: rgba(20, 26, 50, 0.9);
+  --line: rgba(255, 255, 255, 0.10);
+  --text: #F4F7FF; --text-dim: rgba(220, 230, 255, 0.62); --text-on-accent: #0A0D18;
+  --glow: 1;
+  --accent-glow: rgba(255, 225, 77, 0.7); --accent2-glow: rgba(54, 214, 255, 0.45); --accent2-edge: rgba(54, 214, 255, 0.65);
+  --radius: 4px;
+  --font-display: 'Chakra Petch', 'Inter', system-ui, sans-serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+}
+/* TEMA CLEAN: sobrio, chiaro, per eventi istituzionali */
+[data-theme="clean"] {
+  --yellow: #F5B700; --green: #12B76A; --cyan: #1F7AFF; --magenta: #D6409F; --orange: #F07A1A; --white: #FFFFFF;
+  --accent: var(--cyan); --accent-2: #0B1220; --accent-3: var(--green);
+  --panel: rgba(255, 255, 255, 0.96);
+  --panel-2: rgba(238, 242, 250, 0.98);
+  --line: rgba(10, 20, 40, 0.10);
+  --text: #0B1220; --text-dim: rgba(11, 18, 32, 0.6); --text-on-accent: #FFFFFF;
+  --glow: 0;
+  --accent-glow: transparent; --accent2-glow: transparent; --accent2-edge: rgba(10, 20, 40, 0.12);
+  --radius: 10px;
+}
+
+/* TEMA GLASS: vetro liquido, glow viola */
+[data-theme="glass"] {
+  --yellow: #FFD66B; --green: #7DFFC8; --cyan: #9FE8FF; --magenta: #FF7AE0; --orange: #FFB07A; --white: #FFFFFF;
+  --violet: #A66BFF; --violet-deep: #6C3BFF; --lilac: #E2C8FF;
+  --accent: var(--lilac); --accent-2: var(--violet); --accent-3: var(--cyan);
+  --danger: #FF6B8E;
+  --panel: transparent; --panel-2: rgba(255, 255, 255, 0.10);
+  --line: rgba(255, 255, 255, 0.10);
+  --text: #FFFFFF; --text-dim: rgba(235, 225, 255, 0.72); --text-on-accent: #FFFFFF;
+  --glow: 1;
+  --accent-glow: rgba(176, 120, 255, 0.85); --accent2-glow: rgba(150, 90, 255, 0.55); --accent2-edge: rgba(255, 255, 255, 0.16);
+  --radius: 30px;
+  --font-display: 'Inter', system-ui, sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 1920px; height: 1080px; overflow: hidden; background: transparent; }
+body { font-family: var(--font-body); color: var(--text); -webkit-font-smoothing: antialiased; }
+
+/* Anteprima nel browser: aggiungi ?bg=1 all'indirizzo per vedere uno sfondo di prova */
+body.preview-bg {
+  background:
+    radial-gradient(circle at 30% 30%, #2a3570 0, transparent 50%),
+    radial-gradient(circle at 75% 70%, #4a1f5c 0, transparent 45%),
+    linear-gradient(135deg, #10131f, #1b1f33);
+}
+
+.display { font-family: var(--font-display); font-weight: 700; letter-spacing: 0.02em; text-transform: var(--display-case, uppercase); }
+.num { font-variant-numeric: tabular-nums; }
+
+/* Bagliore neon: si spegne da solo nel tema clean (--glow: 0) */
+.glow-accent { text-shadow: 0 0 18px var(--accent-glow); }
+.neon-edge {
+  box-shadow:
+    0 0 0 1px var(--accent2-edge),
+    0 0 28px var(--accent2-glow),
+    0 18px 50px rgba(0, 0, 0, 0.35);
+}
+
+.c-yellow  { --c: var(--yellow);  --c-glow: rgba(255, 225, 77, .55); }
+.c-green   { --c: var(--green);   --c-glow: rgba(61, 255, 160, .5); }
+.c-cyan    { --c: var(--cyan);    --c-glow: rgba(54, 214, 255, .5); }
+.c-magenta { --c: var(--magenta); --c-glow: rgba(255, 79, 216, .5); }
+.c-orange  { --c: var(--orange);  --c-glow: rgba(255, 154, 60, .5); }
+.c-white   { --c: var(--white);   --c-glow: rgba(255, 255, 255, .45); }
+[data-theme="clean"] [class*="c-"] { --c-glow: transparent; }
+
+.hidden-init { visibility: hidden; }
+
+/* Indicatore di connessione persa (visibile solo in anteprima, mai in onda) */
+#gfx-offline { position: fixed; top: 10px; left: 10px; padding: 6px 10px; background: #c0263d; color: #fff;
+  font: 600 14px var(--font-body); border-radius: 4px; display: none; }
+body.preview-bg.offline #gfx-offline { display: block; }

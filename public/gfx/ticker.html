@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<title>LiveGFX · Ticker</title>
+<link rel="stylesheet" href="common.css">
+<link rel="stylesheet" href="glass.css">
+<link rel="stylesheet" href="themes.css">
+<style>
+  #tk { position: absolute; left: 0; right: 0; bottom: 0; height: 66px; display: flex; background: var(--panel); }
+  #tk::before { content: ''; position: absolute; left: 0; right: 0; top: 0; height: 3px;
+    background: linear-gradient(90deg, var(--yellow), var(--green), var(--cyan)); }
+  .label { position: relative; z-index: 2; display: flex; align-items: center; gap: 12px; padding: 0 30px 0 34px;
+    font: 700 26px var(--font-display); letter-spacing: .18em; color: var(--text-on-accent); background: var(--accent);
+    clip-path: polygon(0 0, 100% 0, calc(100% - 22px) 100%, 0 100%); }
+  .label .dot { width: 12px; height: 12px; border-radius: 50%; background: var(--danger); box-shadow: 0 0 10px var(--danger); }
+  .viewport { position: relative; flex: 1; overflow: hidden;
+    -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 60px, #000 calc(100% - 60px), transparent 100%); }
+  .track { position: absolute; top: 0; left: 0; height: 100%; display: flex; align-items: center; white-space: nowrap; will-change: transform; }
+  .item { font: 600 28px var(--font-body); padding: 0 8px; }
+  .sep { display: inline-block; width: 12px; height: 12px; margin: 0 26px; transform: rotate(45deg); background: var(--accent-2);
+    box-shadow: 0 0 10px var(--accent2-glow); }
+</style>
+</head>
+<body>
+<div id="tk" class="hidden-init">
+  <div class="label"><span class="dot"></span><span id="label"></span></div>
+  <div class="viewport"><div class="track" id="track"></div></div>
+</div>
+<script src="../vendor/gsap.min.js"></script>
+<script src="common.js"></script>
+<script>
+const tk = document.getElementById('tk');
+const track = document.getElementById('track');
+const viewport = document.querySelector('.viewport');
+let visible = false, speed = 120, x = 0, loopW = 0, itemsKey = '', last = performance.now();
+
+function build(items) {
+  const one = items.map((t) => `<span class="item">${LiveGFX.esc(t)}</span><span class="sep"></span>`).join('');
+  // Ripete il contenuto finché copre almeno 2 volte la larghezza: lo scorrimento è continuo, senza buchi
+  track.innerHTML = one;
+  loopW = track.scrollWidth || 1;
+  const copies = Math.max(2, Math.ceil((viewport.clientWidth * 2) / loopW) + 1);
+  track.innerHTML = one.repeat(copies);
+  x = x % loopW;
+}
+
+function frame(t) {
+  const dt = Math.min(0.1, (t - last) / 1000); last = t;
+  if (visible && loopW > 1) {
+    x -= speed * dt;
+    if (-x >= loopW) x += loopW;
+    track.style.transform = `translate3d(${x}px,0,0)`;
+  }
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+gsap.to('.label .dot', { opacity: 0.2, duration: 0.7, repeat: -1, yoyo: true });
+
+LiveGFX.onState((s) => {
+  const K = s.ticker;
+  speed = K.speed;
+  document.getElementById('label').textContent = K.label || 'LIVE';
+  const key = JSON.stringify(K.items);
+  if (key !== itemsKey) {
+    itemsKey = key;
+    if (visible) gsap.fromTo(track, { opacity: 0 }, { opacity: 1, duration: 0.5 });
+    build(K.items.length ? K.items : [' ']);
+  }
+  if (K.visible && !visible) {
+    visible = true;
+    gsap.killTweensOf(tk);
+    gsap.set(tk, { visibility: 'visible' });
+    x = viewport.clientWidth * 0.3;
+    gsap.timeline()
+      .fromTo(tk, { y: 80 }, { y: 0, duration: 0.6, ease: 'power4.out' })
+      .from('.label', { x: -260, duration: 0.5, ease: 'power3.out' }, '-=0.3');
+  } else if (!K.visible && visible) {
+    gsap.killTweensOf(tk);
+    gsap.to(tk, { y: 80, duration: 0.45, ease: 'power3.in', onComplete: () => { visible = false; gsap.set(tk, { visibility: 'hidden' }); } });
+  }
+});
+</script>
+</body>
+</html>

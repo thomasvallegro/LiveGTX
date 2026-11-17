@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<title>LiveGFX · Sottotitoli</title>
+<link rel="stylesheet" href="common.css">
+<link rel="stylesheet" href="themes.css">
+<!--
+  Sottotitoli live stile TikTok. Le parole arrivano dal programma "sottotitoli"
+  (cartella sottotitoli/) attraverso il server LiveGFX.
+  Posizione, parole per blocco, dimensione e colore si cambiano dal pannello.
+-->
+<style>
+  :root { --subs-size: 84px; --subs-hl: var(--accent); }
+  #zona { position: absolute; left: 0; right: 0; display: flex; justify-content: center; padding: 0 90px; }
+  body.bottom #zona { bottom: 120px; }
+  body.center #zona { top: 50%; transform: translateY(-50%); }
+  body.top #zona { top: 100px; }
+
+  #blocco { display: flex; flex-wrap: wrap; justify-content: center; gap: 0 .3em;
+    font-family: var(--subs-font, 'Inter', system-ui, sans-serif); font-weight: 800;
+    font-size: var(--subs-size); line-height: 1.15; text-align: center;
+    text-transform: var(--subs-case, uppercase); color: var(--subs-text, #fff); transition: opacity .35s ease; }
+  #blocco.nascosto { opacity: 0; }
+
+  /* contorno nero spesso + ombra, fatto con text-shadow (compatibile con OBS) */
+  .p { display: inline-block; transition: color .12s;
+    text-shadow: var(--subs-outline,
+      .06em 0 0 #000, -.06em 0 0 #000, 0 .06em 0 #000, 0 -.06em 0 #000,
+      .043em .043em 0 #000, -.043em .043em 0 #000, .043em -.043em 0 #000, -.043em -.043em 0 #000,
+      .03em .055em 0 #000, -.03em .055em 0 #000, .03em -.055em 0 #000, -.03em -.055em 0 #000,
+      .055em .03em 0 #000, -.055em .03em 0 #000, .055em -.03em 0 #000, -.055em -.03em 0 #000,
+      0 .1em .15em rgba(0,0,0,.55)); }
+  .p.attiva { color: var(--subs-hl); }
+  .p.pop { animation: pop .22s cubic-bezier(.2, 1.6, .4, 1) both; }
+  @keyframes pop { 0% { transform: scale(.5); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+  #hidden-all { transition: opacity .3s; }
+  body.off #hidden-all { opacity: 0; }
+</style>
+</head>
+<body class="bottom off">
+<div id="hidden-all"><div id="zona"><div id="blocco" class="nascosto"></div></div></div>
+<script src="common.js"></script>
+<script>
+const blocco = document.getElementById('blocco');
+const HL = { yellow: 'var(--yellow)', green: 'var(--green)', cyan: 'var(--cyan)', magenta: 'var(--magenta)', white: '#fff', accent: 'var(--accent)' };
+let PAROLE = 4, NASCONDI_MS = 3000;
+let fraseAttuale = null, inizioBlocco = -1, span = [], timer = null;
+
+function mostra() {
+  blocco.classList.remove('nascosto');
+  clearTimeout(timer);
+  timer = setTimeout(() => blocco.classList.add('nascosto'), NASCONDI_MS);
+}
+function svuota() {
+  clearTimeout(timer);
+  blocco.classList.add('nascosto');
+  fraseAttuale = null; inizioBlocco = -1;
+  setTimeout(() => { if (blocco.classList.contains('nascosto') && fraseAttuale === null) { blocco.textContent = ''; span = []; } }, 400);
+}
+
+// Le parole arrivano man mano e si mostrano a blocchi di PAROLE; l'ultima arrivata è evidenziata.
+// Se il riconoscimento corregge una parola già a schermo, viene sostituita senza animazione.
+function disegna(ev) {
+  const parole = ev.parole;
+  if (!parole || !parole.length) return;
+  const n = parole.length;
+  const inizio = Math.floor((n - 1) / PAROLE) * PAROLE;
+  if (ev.id !== fraseAttuale || inizio !== inizioBlocco) {
+    blocco.textContent = ''; span = [];
+    fraseAttuale = ev.id; inizioBlocco = inizio;
+  }
+  const visibili = parole.slice(inizio, inizio + PAROLE);
+  visibili.forEach((parola, i) => {
+    if (span[i]) { if (span[i].textContent !== parola) span[i].textContent = parola; }
+    else {
+      const s = document.createElement('span');
+      s.className = 'p pop'; s.textContent = parola;
+      blocco.appendChild(s); span.push(s);
+    }
+  });
+  while (span.length > visibili.length) span.pop().remove();
+  span.forEach((s, i) => s.classList.toggle('attiva', i === visibili.length - 1));
+  mostra();
+}
+
+LiveGFX.onMessage('subs', (m) => {
+  if (m.ev.tipo === 'parole') disegna(m.ev);
+  else if (m.ev.tipo === 'svuota') svuota();
+});
+
+let wasPaused = false;
+LiveGFX.onState((s) => {
+  const S = s.subtitles;
+  PAROLE = S.words; NASCONDI_MS = S.hideAfter * 1000;
+  document.body.className = S.position + (S.visible ? '' : ' off') + (document.body.classList.contains('preview-bg') ? ' preview-bg' : '');
+  document.documentElement.style.setProperty('--subs-size', S.size + 'px');
+  document.documentElement.style.setProperty('--subs-hl', HL[S.highlight] || HL.accent);
+  if (S.paused && !wasPaused) svuota();
+  wasPaused = S.paused;
+});
+</script>
+</body>
+</html>

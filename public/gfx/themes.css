@@ -1,0 +1,191 @@
+/* ============================================================
+   TEMI EXTRA: Cinema · Old Game · Glitch · Personalizzato
+   Ogni tema parte dalle variabili di common.css (tema Neon) e
+   cambia colori, font e qualche dettaglio di forma.
+   Il tema Personalizzato riceve i colori dal pannello (common.js).
+   ============================================================ */
+
+/* ---------------------------------------------------------------
+   CINEMA — nero e oro, titoli con grazie, linee sottili, eleganza
+   --------------------------------------------------------------- */
+[data-theme="cinema"] {
+  --yellow: #E8C66A; --green: #C9B37E; --cyan: #F3E6C4; --magenta: #B5643C; --orange: #D9963F; --white: #FFF8E7;
+  --accent: #E2BF63; --accent-2: #F3E6C4; --accent-3: #B08D3C;
+  --danger: #D9534F;
+  --panel: rgba(8, 7, 5, 0.9); --panel-2: rgba(30, 25, 16, 0.92);
+  --line: rgba(226, 191, 99, 0.18);
+  --text: #FFF8E7; --text-dim: rgba(243, 230, 196, 0.62); --text-on-accent: #120E06;
+  --glow: 0.4;
+  --accent-glow: rgba(226, 191, 99, 0.35); --accent2-glow: rgba(226, 191, 99, 0.18); --accent2-edge: rgba(226, 191, 99, 0.55);
+  --radius: 0px;
+  --font-display: 'Playfair Display', Georgia, serif;
+  --display-case: none;
+  --subs-font: 'Playfair Display', Georgia, serif; --subs-case: none;
+}
+[data-theme="cinema"] .display { font-weight: 900; letter-spacing: 0.005em; }
+[data-theme="cinema"] .glow-accent { text-shadow: 0 0 24px rgba(226, 191, 99, .35); }
+/* cornice doppia sottile, come un cartello d'epoca */
+[data-theme="cinema"] .neon-edge {
+  box-shadow: 0 0 0 1px rgba(226,191,99,.7), 0 0 0 6px rgba(8,7,5,.9), 0 0 0 7px rgba(226,191,99,.35), 0 24px 60px rgba(0,0,0,.55);
+}
+[data-theme="cinema"] .head::after, [data-theme="cinema"] #tk::before, [data-theme="cinema"] .question::after {
+  background: linear-gradient(90deg, transparent, #E2BF63 20%, #F3E6C4 50%, #E2BF63 80%, transparent);
+  height: 1px;
+}
+[data-theme="cinema"] .bar { background: linear-gradient(180deg, #F3E6C4, #E2BF63, #8C6A22); width: 4px; }
+[data-theme="cinema"] .tag, [data-theme="cinema"] .label, [data-theme="cinema"] .live, [data-theme="cinema"] .status,
+[data-theme="cinema"] #sb .title, [data-theme="cinema"] .kicker, [data-theme="cinema"] #win .k {
+  font-family: 'Inter', sans-serif; font-weight: 600; letter-spacing: .32em;
+}
+[data-theme="cinema"] .name, [data-theme="cinema"] .tname, [data-theme="cinema"] .opt .text { font-family: 'Playfair Display', serif; text-transform: none; }
+[data-theme="cinema"] .row[data-rank="1"] .rank { color: #E2BF63; }
+[data-theme="cinema"] .row[data-rank="2"] .rank { color: #D8D8D8; }
+[data-theme="cinema"] .row[data-rank="3"] .rank { color: #C08A5A; }
+[data-theme="cinema"] .rank, [data-theme="cinema"] .score, [data-theme="cinema"] .time, [data-theme="cinema"] .tscore,
+[data-theme="cinema"] .opt .pct { font-family: 'Playfair Display', serif; }
+[data-theme="cinema"] .sep { transform: none; width: 6px; height: 6px; border-radius: 50%; background: #E2BF63; }
+[data-theme="cinema"] #an .backdrop {
+  background: radial-gradient(ellipse at center, rgba(0,0,0,.92) 0, rgba(0,0,0,.82) 55%, rgba(0,0,0,.55) 100%);
+}
+/* annuncio "a sipario": bande nere stile cinemascope */
+[data-theme="cinema"] #an::before, [data-theme="cinema"] #an::after {
+  content: ''; position: absolute; left: 0; right: 0; height: 130px; background: #000; z-index: 1;
+}
+[data-theme="cinema"] #an::before { top: 0; }
+[data-theme="cinema"] #an::after { bottom: 0; }
+[data-theme="cinema"] #an .title { font-size: 160px; }
+[data-theme="cinema"] #an .line { height: 1px; }
+[data-theme="cinema"] .p { text-shadow: 0 2px 4px rgba(0,0,0,.9), 0 0 18px rgba(0,0,0,.8); }
+
+/* ---------------------------------------------------------------
+   OLD GAME — arcade anni '80: pixel font, colori saturi, bordi a
+   gradini, righe di scansione da vecchio monitor
+   --------------------------------------------------------------- */
+[data-theme="oldgame"] {
+  --yellow: #FFE53B; --green: #3CFF6A; --cyan: #3DE1FF; --magenta: #FF3DC8; --orange: #FF8A1F; --white: #FFFFFF;
+  --accent: #FFE53B; --accent-2: #FF3DC8; --accent-3: #3DE1FF;
+  --danger: #FF3B3B;
+  --panel: rgba(18, 8, 48, 0.94); --panel-2: rgba(40, 18, 96, 0.96);
+  --line: rgba(255, 255, 255, 0.14);
+  --text: #FFFFFF; --text-dim: rgba(200, 220, 255, 0.75); --text-on-accent: #120830;
+  --glow: 0.7;
+  --accent-glow: rgba(255, 229, 59, 0.55); --accent2-glow: rgba(255, 61, 200, 0.4); --accent2-edge: #FFFFFF;
+  --radius: 0px;
+  --font-display: 'Press Start 2P', monospace;
+  --font-body: 'VT323', monospace;
+  --subs-font: 'Press Start 2P', monospace; --subs-case: uppercase;
+}
+/* bordo "a pixel": doppia cornice squadrata */
+[data-theme="oldgame"] .neon-edge {
+  box-shadow: 0 0 0 4px #FFFFFF, 0 0 0 8px #120830, 0 0 0 12px var(--accent-2), 12px 12px 0 12px rgba(0,0,0,.45);
+}
+/* righe di scansione sopra i pannelli */
+[data-theme="oldgame"] #board, [data-theme="oldgame"] .box, [data-theme="oldgame"] #tm, [data-theme="oldgame"] #tk,
+[data-theme="oldgame"] #ck, [data-theme="oldgame"] #vt .card, [data-theme="oldgame"] #win .box {
+  background-image: repeating-linear-gradient(0deg, rgba(255,255,255,.045) 0 2px, transparent 2px 4px);
+}
+[data-theme="oldgame"] .display { letter-spacing: 0; font-weight: 400; line-height: 1.25; }
+[data-theme="oldgame"] .glow-accent { text-shadow: 4px 4px 0 var(--accent-2), 0 0 18px rgba(255,229,59,.4); }
+[data-theme="oldgame"] .head::after, [data-theme="oldgame"] #tk::before, [data-theme="oldgame"] .question::after {
+  height: 6px; background: repeating-linear-gradient(90deg, #FFE53B 0 12px, #FF3DC8 12px 24px, #3DE1FF 24px 36px);
+}
+/* i font pixel sono larghi: dimensioni ridotte */
+[data-theme="oldgame"] #board .title { font-size: 34px; }
+[data-theme="oldgame"] .live, [data-theme="oldgame"] .status, [data-theme="oldgame"] .tag, [data-theme="oldgame"] .label,
+[data-theme="oldgame"] #sb .title, [data-theme="oldgame"] .kicker, [data-theme="oldgame"] #win .k, [data-theme="oldgame"] #qr .head {
+  font-family: 'Press Start 2P', monospace; font-weight: 400; letter-spacing: .05em; font-size: 15px;
+}
+[data-theme="oldgame"] .row .name { font-size: 22px; font-weight: 400; }
+[data-theme="oldgame"] .row .sub, [data-theme="oldgame"] .role, [data-theme="oldgame"] .date, [data-theme="oldgame"] #qr .hint,
+[data-theme="oldgame"] #qr .url, [data-theme="oldgame"] .opt .cnt, [data-theme="oldgame"] .subtitle { font-family: 'VT323', monospace; }
+[data-theme="oldgame"] .role { font-size: 38px; }
+[data-theme="oldgame"] .row .sub { font-size: 24px; }
+[data-theme="oldgame"] .date { font-size: 22px; }
+[data-theme="oldgame"] #qr .hint { font-size: 22px; }
+[data-theme="oldgame"] #qr .url { font-size: 26px; }
+[data-theme="oldgame"] .opt .cnt { font-size: 26px; }
+[data-theme="oldgame"] #an .subtitle { font-size: 50px; }
+[data-theme="oldgame"] .rank { font-size: 26px; font-weight: 400; }
+[data-theme="oldgame"] .score { font-size: 28px; font-weight: 400; }
+[data-theme="oldgame"] .score small { font-size: 12px; }
+[data-theme="oldgame"] #lt .name { font-size: 42px; }
+[data-theme="oldgame"] .bar { background: repeating-linear-gradient(180deg, #FFE53B 0 10px, #FF3DC8 10px 20px, #3DE1FF 20px 30px); border-radius: 0; }
+[data-theme="oldgame"] .tname { font-size: 20px; font-weight: 400; }
+[data-theme="oldgame"] .tscore { font-size: 34px; font-weight: 400; }
+[data-theme="oldgame"] #tm .time, [data-theme="oldgame"] #ck .time { font-size: 38px; font-weight: 400; }
+[data-theme="oldgame"] #tk .item { font-family: 'VT323', monospace; font-size: 36px; }
+[data-theme="oldgame"] .sep { transform: none; border-radius: 0; }
+[data-theme="oldgame"] #an .title { font-size: 92px; }
+[data-theme="oldgame"] #an .kicker { font-size: 24px; }
+[data-theme="oldgame"] #vt .question { font-size: 36px; line-height: 1.35; }
+[data-theme="oldgame"] .opt .text { font-size: 22px; font-weight: 400; }
+[data-theme="oldgame"] .opt .letter { font-size: 26px; font-weight: 400; }
+[data-theme="oldgame"] .opt .pct { font-size: 28px; font-weight: 400; }
+[data-theme="oldgame"] .hiddenres .opt .val::after { font-size: 28px; font-weight: 400; }
+[data-theme="oldgame"] #wh .title { font-size: 40px; }
+[data-theme="oldgame"] #win .n { font-size: 56px; }
+[data-theme="oldgame"] .p { font-weight: 400; }
+[data-theme="oldgame"] #blocco { font-size: calc(var(--subs-size) * .62); line-height: 1.45; }
+/* lampeggio "INSERT COIN" per il pallino live */
+[data-theme="oldgame"] .live .dot, [data-theme="oldgame"] .status .dot { border-radius: 0; }
+
+/* ---------------------------------------------------------------
+   GLITCH — nero, verde acido e rosa, testo con canali RGB separati
+   e piccoli "disturbi" periodici
+   --------------------------------------------------------------- */
+[data-theme="glitch"] {
+  --yellow: #E8FF3A; --green: #39FF88; --cyan: #00F0FF; --magenta: #FF2E88; --orange: #FF7A2E; --white: #F2F2F2;
+  --accent: #39FF88; --accent-2: #FF2E88; --accent-3: #00F0FF;
+  --danger: #FF2E55;
+  --panel: rgba(4, 6, 8, 0.92); --panel-2: rgba(16, 22, 26, 0.95);
+  --line: rgba(57, 255, 136, 0.14);
+  --text: #F2F2F2; --text-dim: rgba(200, 255, 225, 0.6); --text-on-accent: #040608;
+  --glow: 0.8;
+  --accent-glow: rgba(57, 255, 136, 0.55); --accent2-glow: rgba(255, 46, 136, 0.35); --accent2-edge: rgba(0, 240, 255, 0.55);
+  --radius: 0px;
+  --font-display: 'Chakra Petch', 'Inter', sans-serif;
+}
+[data-theme="glitch"] .neon-edge {
+  box-shadow: -3px 0 0 rgba(255,46,136,.85), 3px 0 0 rgba(0,240,255,.85), 0 0 34px rgba(57,255,136,.25), 0 20px 60px rgba(0,0,0,.6);
+}
+[data-theme="glitch"] .display { letter-spacing: .04em; }
+[data-theme="glitch"] .glow-accent, [data-theme="glitch"] #lt .name, [data-theme="glitch"] .time, [data-theme="glitch"] #win .n {
+  text-shadow: -3px 0 0 rgba(255,46,136,.9), 3px 0 0 rgba(0,240,255,.9), 0 0 20px rgba(57,255,136,.4);
+  animation: lg-glitch 4.2s steps(1) infinite;
+}
+/* solo clip-path e text-shadow: niente transform, così non si scontra con le animazioni GSAP */
+@keyframes lg-glitch {
+  0%, 86%, 100% { clip-path: none; }
+  87% { clip-path: inset(10% 0 55% 0); text-shadow: -9px 0 0 rgba(255,46,136,.95), 7px 0 0 rgba(0,240,255,.95); }
+  88% { clip-path: inset(60% 0 8% 0); text-shadow: 8px 0 0 rgba(255,46,136,.95), -8px 0 0 rgba(0,240,255,.95); }
+  89% { clip-path: inset(30% 0 40% 0); text-shadow: -4px 0 0 rgba(255,46,136,.95), 4px 0 0 rgba(0,240,255,.95); }
+  90% { clip-path: none; }
+}
+/* righe di disturbo che scorrono sui pannelli */
+[data-theme="glitch"] #board, [data-theme="glitch"] .box, [data-theme="glitch"] #tm, [data-theme="glitch"] #tk,
+[data-theme="glitch"] #ck, [data-theme="glitch"] #vt .card, [data-theme="glitch"] #win .box {
+  background-image: repeating-linear-gradient(0deg, rgba(57,255,136,.05) 0 1px, transparent 1px 3px);
+}
+[data-theme="glitch"] .head::after, [data-theme="glitch"] #tk::before, [data-theme="glitch"] .question::after {
+  background: linear-gradient(90deg, #FF2E88 0 33%, #39FF88 33% 66%, #00F0FF 66%);
+  animation: lg-bar 2.6s steps(1) infinite;
+}
+@keyframes lg-bar { 0%, 92%, 100% { clip-path: none; } 93% { clip-path: inset(0 20% 0 0); } 95% { clip-path: inset(0 0 0 35%); } }
+[data-theme="glitch"] .bar { background: linear-gradient(180deg, #FF2E88, #39FF88, #00F0FF); }
+[data-theme="glitch"] .tag, [data-theme="glitch"] .label { background: var(--accent); color: var(--text-on-accent); }
+[data-theme="glitch"] .p.attiva { text-shadow: -3px 0 0 rgba(255,46,136,.9), 3px 0 0 rgba(0,240,255,.9), 0 .08em 0 #000, 0 -.06em 0 #000, .06em 0 0 #000, -.06em 0 0 #000; }
+[data-theme="glitch"] .sep { background: var(--accent-2); }
+
+/* ---------------------------------------------------------------
+   PERSONALIZZATO — i colori arrivano dal pannello; qui solo
+   piccoli ritocchi perché tutto segua le variabili
+   --------------------------------------------------------------- */
+[data-theme="custom"] .head::after, [data-theme="custom"] #tk::before, [data-theme="custom"] .question::after,
+[data-theme="custom"] .bar, [data-theme="custom"] #an .line {
+  background: linear-gradient(90deg, var(--accent), var(--accent-3), var(--accent-2));
+}
+[data-theme="custom"] .bar { background: linear-gradient(180deg, var(--accent), var(--accent-3), var(--accent-2)); }
+[data-theme="custom"] .name, [data-theme="custom"] .tname, [data-theme="custom"] .opt .text { text-transform: var(--display-case, uppercase); }
+[data-theme="custom"] .row[data-rank="1"] .rank { color: var(--accent); text-shadow: 0 0 16px var(--accent-glow); }
+[data-theme="custom"] .row[data-rank="2"] .rank { color: var(--accent-2); }
+[data-theme="custom"] .row[data-rank="3"] .rank { color: var(--accent-3); }

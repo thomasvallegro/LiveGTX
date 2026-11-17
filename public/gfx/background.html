@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<title>LiveGFX · Sfondo animato</title>
+<link rel="stylesheet" href="common.css">
+<!--
+  Sfondo animato a schermo intero. In OBS mettilo IN FONDO alla scena (sotto camere e grafiche).
+  Segue lo sfondo scelto nel pannello (scheda Sfondi).
+  Per bloccare questa fonte su un preset preciso aggiungi ?preset=Nome all'indirizzo,
+  es. http://localhost:3000/gfx/background.html?preset=Pausa
+-->
+<style>
+  html, body { background: #000 !important; }
+  #bg { position: fixed; inset: 0; overflow: hidden; }
+</style>
+</head>
+<body>
+<div id="bg"></div>
+<script src="common.js"></script>
+<script src="bgrender.js"></script>
+<script>
+const params = new URLSearchParams(location.search);
+const pinned = (params.get('preset') || '').trim().toLowerCase();
+const bg = BGRender.create(document.getElementById('bg'), { fps: Number(params.get('fps')) || 30 });
+let lastKey = '';
+LiveGFX.onState((s) => {
+  let look = s.background;
+  if (pinned) {
+    const p = s.bgPresets.find((x) => x.name.toLowerCase() === pinned);
+    if (p) look = p.bg;
+  }
+  const key = JSON.stringify(look);
+  if (key !== lastKey) { lastKey = key; bg.set(look); }
+});
+</script>
+</body>
+</html>

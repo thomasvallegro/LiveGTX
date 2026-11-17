@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<title>LiveGFX · Lower third ospiti</title>
+<link rel="stylesheet" href="common.css">
+<link rel="stylesheet" href="glass.css">
+<link rel="stylesheet" href="themes.css">
+<style>
+  #lt { position: absolute; left: 110px; bottom: 120px; display: flex; align-items: stretch; max-width: 1200px; }
+  #lt.right { left: auto; right: 110px; flex-direction: row-reverse; text-align: right; }
+  .bar { width: 10px; background: linear-gradient(180deg, var(--yellow), var(--green), var(--cyan));
+    box-shadow: 0 0 22px var(--accent2-glow); border-radius: 2px; transform-origin: 50% 100%; }
+  .box { position: relative; background: var(--panel); padding: 20px 36px 22px; border-radius: 0 var(--radius) var(--radius) 0; overflow: hidden; min-width: 480px; }
+  #lt.right .box { border-radius: var(--radius) 0 0 var(--radius); }
+  .box::before { content: ''; position: absolute; inset: 0; pointer-events: none;
+    background: linear-gradient(100deg, transparent 0 40%, rgba(255,255,255,.10) 50%, transparent 60% 100%);
+    transform: translateX(var(--shine, -120%)); }
+  .tag { display: inline-block; font: 700 20px var(--font-display); letter-spacing: .16em; text-transform: uppercase;
+    color: var(--text-on-accent); background: var(--accent); padding: 5px 12px; border-radius: 3px; margin-bottom: 10px; }
+  .mask { overflow: hidden; }
+  .name { font-size: 68px; line-height: 1.05; white-space: nowrap; }
+  .role { font: 400 30px var(--font-body); color: var(--text-dim); margin-top: 6px; white-space: nowrap; }
+  .role b { color: var(--accent-2); font-weight: 600; }
+</style>
+</head>
+<body>
+<div id="lt" class="hidden-init">
+  <div class="bar"></div>
+  <div class="box neon-edge">
+    <div class="tag" id="tag"></div>
+    <div class="mask"><div class="name display" id="name"></div></div>
+    <div class="mask"><div class="role" id="role"></div></div>
+  </div>
+</div>
+<script src="../vendor/gsap.min.js"></script>
+<script src="common.js"></script>
+<script>
+const lt = document.getElementById('lt');
+const box = document.querySelector('.box');
+let onAir = null;      // id + shownAt dell'ospite attualmente in onda
+let tl = null;
+
+function fill(g) {
+  const tag = document.getElementById('tag');
+  tag.textContent = g.tag || '';
+  tag.style.display = g.tag ? '' : 'none';
+  LiveGFX.splitChars(document.getElementById('name'), g.name);
+  document.getElementById('role').textContent = g.role || '';
+  document.getElementById('role').style.display = g.role ? '' : 'none';
+}
+
+function animIn() {
+  tl?.kill();
+  gsap.set(lt, { visibility: 'visible', opacity: 1 });
+  tl = gsap.timeline()
+    .fromTo('.bar', { scaleY: 0 }, { scaleY: 1, duration: 0.35, ease: 'power3.out' })
+    .fromTo('.box', { clipPath: LiveGFX.clip(lt.classList.contains('right') ? 'inset(0 0 0 100%)' : 'inset(0 100% 0 0)', box) },
+      { clipPath: LiveGFX.clip('inset(0 0% 0 0%)', box), duration: 0.6, ease: 'power4.inOut' }, '-=0.1')
+    .from('.tag', { y: -20, opacity: 0, duration: 0.35, ease: 'power3.out' }, '-=0.25')
+    .from('#name .ch', { yPercent: 110, duration: 0.5, stagger: 0.02, ease: 'power3.out' }, '-=0.25')
+    .from('#role', { yPercent: 110, duration: 0.45, ease: 'power3.out' }, '-=0.35')
+    .fromTo('.box', { '--shine': '-120%' }, { '--shine': '120%', duration: 1.1, ease: 'power2.inOut' }, '-=0.2');
+}
+function animOut(then) {
+  tl?.kill();
+  tl = gsap.timeline({ onComplete: then })
+    .to(['#name', '#role', '.tag'], { yPercent: 110, opacity: 0, duration: 0.25, stagger: 0.04, ease: 'power2.in' })
+    .to('.box', { clipPath: LiveGFX.clip(lt.classList.contains('right') ? 'inset(0 0 0 100%)' : 'inset(0 100% 0 0)', box), duration: 0.4, ease: 'power4.in' }, '-=0.05')
+    .to('.bar', { scaleY: 0, duration: 0.25 }, '-=0.1')
+    .set(lt, { visibility: 'hidden' })
+    .set(['#name', '#role', '.tag'], { yPercent: 0, opacity: 1 });
+}
+
+LiveGFX.onState((s) => {
+  const L = s.lowerthird;
+  lt.classList.toggle('right', L.position === 'right');
+  const key = L.visible && L.current ? L.current.id + ':' + L.current.shownAt : null;
+  if (key === onAir) return;
+  const wasOn = onAir !== null;
+  onAir = key;
+  if (!key) { if (wasOn) animOut(); return; }
+  // Nuovo ospite: se ce n'era già uno in onda, prima esce e poi entra il nuovo
+  if (wasOn) animOut(() => { fill(L.current); animIn(); });
+  else { fill(L.current); animIn(); }
+});
+</script>
+</body>
+</html>
