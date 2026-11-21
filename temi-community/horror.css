@@ -1,0 +1,43 @@
+/* LiveGFX tema: Horror classico */
+/* Verde spettrale, nebbia che si muove, titoli gotici.
+   Si importa dal pannello: Impostazioni → I miei temi → Importa. */
+
+[data-theme="horror"] {
+  --yellow: #D4F5A8;
+  --green: #7CFFB2;
+  --cyan: #8FD3C8;
+  --magenta: #9D8DF1;
+  --orange: #E3A16A;
+  --white: #FFFFFF;
+  --accent: #7CFFB2;
+  --accent-2: #9D8DF1;
+  --accent-3: #E8E6E3;
+  --danger: #FF3B4E;
+  --panel: rgba(6,12,10,.94);
+  --panel-2: rgba(16,28,24,.95);
+  --line: rgba(255,255,255,.10);
+  --text: #E8E6E3;
+  --text-dim: rgba(220,235,228,.62);
+  --text-on-accent: #061210;
+  --glow: .8;
+  --accent-glow: rgba(124,255,178,.55);
+  --accent2-glow: rgba(157,141,241,.4);
+  --accent2-edge: rgba(124,255,178,.45);
+  --radius: 2px;
+  --font-display: 'Grenze Gotisch', 'Inter', sans-serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+  --display-case: none;
+}
+[data-theme="horror"] .neon-edge { box-shadow: 0 0 0 1px rgba(124,255,178,.35), 0 0 40px rgba(124,255,178,.12), 0 22px 50px rgba(0,0,0,.65); }
+[data-theme="horror"] .head::after, [data-theme="horror"] #tk::before, [data-theme="horror"] .question::after, [data-theme="horror"] #an .line { background: linear-gradient(90deg, transparent, #7CFFB2 30%, #9D8DF1 70%, transparent); box-shadow: none; }
+[data-theme="horror"] #lt .bar { background: linear-gradient(90deg, transparent, #7CFFB2 30%, #9D8DF1 70%, transparent); box-shadow: none; }
+[data-theme="horror"] #board .head, [data-theme="horror"] #board .rows, [data-theme="horror"] #lt .box, [data-theme="horror"] #tm, [data-theme="horror"] #tk, [data-theme="horror"] #ck, [data-theme="horror"] #vt .card, [data-theme="horror"] #win .box, [data-theme="horror"] #sb .teams { background-image: radial-gradient(ellipse at 20% 80%, rgba(200,255,230,.10), transparent 50%), radial-gradient(ellipse at 80% 30%, rgba(200,255,230,.07), transparent 45%); }
+[data-theme="horror"] #lt .tag, [data-theme="horror"] #tk .label, [data-theme="horror"] #tm .label, [data-theme="horror"] #ck .label, [data-theme="horror"] #board .live, [data-theme="horror"] #sb .title, [data-theme="horror"] #an .kicker { font-family: 'Inter', system-ui, sans-serif; }
+[data-theme="horror"] #board .head, [data-theme="horror"] #board .rows, [data-theme="horror"] #lt .box, [data-theme="horror"] #tm,
+[data-theme="horror"] #tk, [data-theme="horror"] #ck, [data-theme="horror"] #vt .card { background-size: 200% 200%; animation: hr-fog 14s ease-in-out infinite alternate; }
+@keyframes hr-fog { from { background-position: 0% 0%; } to { background-position: 100% 100%; } }
+[data-theme="horror"] .display { font-weight: 700; }
+/* il gotico in tutto maiuscolo non si legge: i titoli diventano "Classifica" */
+[data-theme="horror"] #board .title, [data-theme="horror"] #wh .title, [data-theme="horror"] #cv .title { text-transform: lowercase; }
+[data-theme="horror"] #board .title::first-letter, [data-theme="horror"] #wh .title::first-letter, [data-theme="horror"] #cv .title::first-letter { text-transform: uppercase; }
+[data-theme="horror"] .name, [data-theme="horror"] .tname, [data-theme="horror"] .opt .text { font-family: var(--font-display); text-transform: none; }

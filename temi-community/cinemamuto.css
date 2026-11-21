@@ -1,0 +1,41 @@
+/* LiveGFX tema: Pellicola muta */
+/* Bianco e nero, cartelli con cornice, graffi di pellicola.
+   Si importa dal pannello: Impostazioni → I miei temi → Importa. */
+
+[data-theme="cinemamuto"] {
+  --yellow: #F2F0EA;
+  --green: #BDBDBD;
+  --cyan: #DADADA;
+  --magenta: #9A9A9A;
+  --orange: #CFCFCF;
+  --white: #F2F0EA;
+  --accent: #F2F0EA;
+  --accent-2: #9A9A9A;
+  --accent-3: #CFCFCF;
+  --danger: #F2F0EA;
+  --panel: rgba(8,8,8,.95);
+  --panel-2: rgba(26,26,26,.96);
+  --line: rgba(255,255,255,.10);
+  --text: #F2F0EA;
+  --text-dim: rgba(242,240,234,.65);
+  --text-on-accent: #0A0A0A;
+  --glow: 0;
+  --accent-glow: transparent;
+  --accent2-glow: transparent;
+  --accent2-edge: rgba(255,255,255,.15);
+  --radius: 0px;
+  --font-display: 'Limelight', 'Inter', sans-serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+  --display-case: none;
+}
+[data-theme="cinemamuto"] .neon-edge { box-shadow: 0 0 0 2px #F2F0EA, 0 0 0 7px #080808, 0 0 0 9px #F2F0EA, 0 20px 50px rgba(0,0,0,.6); }
+[data-theme="cinemamuto"] .head::after, [data-theme="cinemamuto"] #tk::before, [data-theme="cinemamuto"] .question::after, [data-theme="cinemamuto"] #an .line { background: linear-gradient(90deg, transparent, #F2F0EA 15%, #F2F0EA 85%, transparent); box-shadow: none; }
+[data-theme="cinemamuto"] #lt .bar { background: linear-gradient(90deg, transparent, #F2F0EA 15%, #F2F0EA 85%, transparent); box-shadow: none; }
+[data-theme="cinemamuto"] #board .head, [data-theme="cinemamuto"] #board .rows, [data-theme="cinemamuto"] #lt .box, [data-theme="cinemamuto"] #tm, [data-theme="cinemamuto"] #tk, [data-theme="cinemamuto"] #ck, [data-theme="cinemamuto"] #vt .card, [data-theme="cinemamuto"] #win .box, [data-theme="cinemamuto"] #sb .teams { background-image: repeating-linear-gradient(90deg, rgba(255,255,255,.035) 0 1px, transparent 1px 137px), radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,.45)); }
+[data-theme="cinemamuto"] #lt .tag, [data-theme="cinemamuto"] #tk .label, [data-theme="cinemamuto"] #tm .label, [data-theme="cinemamuto"] #ck .label, [data-theme="cinemamuto"] #board .live, [data-theme="cinemamuto"] #sb .title, [data-theme="cinemamuto"] #an .kicker { font-family: 'Inter', system-ui, sans-serif; }
+[data-theme="cinemamuto"] .display { font-weight: 900; }
+[data-theme="cinemamuto"] .glow-accent { text-shadow: none; }
+[data-theme="cinemamuto"] .name, [data-theme="cinemamuto"] .tname, [data-theme="cinemamuto"] .opt .text { font-family: var(--font-display); text-transform: none; }
+[data-theme="cinemamuto"] #an .backdrop { background: #050505; animation: cm-flicker .16s steps(2) infinite; }
+@keyframes cm-flicker { 0% { opacity: .97; } 100% { opacity: 1; } }
+[data-theme="cinemamuto"] #an .content { box-shadow: 0 0 0 3px #F2F0EA, 0 0 0 12px #050505, 0 0 0 15px #F2F0EA; padding: 50px 90px; }

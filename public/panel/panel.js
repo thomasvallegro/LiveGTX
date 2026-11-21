@@ -25,6 +25,8 @@
       else if (m.t === 'subsStatus') { subsConnected = m.connected; if (S && role) renderSubsEngine(); }
       else if (m.t === 'tunnel') { tunnel = m; if (S && role) { renderTunnel(); renderVote(); } }
       else if (m.t === 'login') onLogin(m);
+      else if (m.t === 'obs') { OBS = m; if (role) renderObs(); }
+      else if (m.t === 'obsThumbs') { Object.assign(obsThumbs, m.thumbs); if (role) renderObsThumbs(); }
       else if (m.t === 'ack') {
         const p = pending.get(m.id); pending.delete(m.id);
         if (!m.ok) toast(m.error || 'Errore', true);
@@ -47,6 +49,7 @@
     $('#login').hidden = true; $('#app').hidden = false;
     loadInfo();
     if (S) render();
+    obsThumbsSync();
   }
 
   function send(action) {
@@ -78,6 +81,7 @@
     $$('#tabs button').forEach((b) => b.classList.toggle('active', b.dataset.tab === name));
     $$('.tab').forEach((t) => { t.hidden = t.dataset.panel !== name; });
     store.set('livegfx.tab', name);
+    obsThumbsSync();
   }
   $('#tabs').addEventListener('click', (e) => { const b = e.target.closest('button[data-tab]'); if (b) showTab(b.dataset.tab); });
   showTab(store.get('livegfx.tab') || 'lb');
@@ -90,7 +94,7 @@
   $('#previewBtn').addEventListener('click', () => {
     const w = $('#previewWrap');
     w.hidden = !w.hidden;
-    if (!w.hidden) { if (!$('#previewFrame').src) $('#previewFrame').src = '/gfx/overlay.html'; sizePreview(); }
+    if (!w.hidden) { if (!$('#previewFrame').src) $('#previewFrame').src = '/gfx/overlay.html?mute=1'; sizePreview(); }
   });
   window.addEventListener('resize', sizePreview);
 
@@ -242,8 +246,12 @@
         'lb.config:title': S.leaderboard.title, 'lb.config:subtitle': S.leaderboard.subtitle, 'lb.config:unit': S.leaderboard.unit,
         'lb.config:maxRows': S.leaderboard.maxRows, 'lb.config:order': S.leaderboard.order,
         'lt.position:value': S.lowerthird.position, 'sb.config:title': S.scoreboard.title, 'theme.set:value': S.theme,
+        'timer.stopText:value': S.timer.stopText ?? 'STOP AL TEMPO',
         'vote.config:reveal': S.vote.reveal, 'vote.config:showQr': String(S.vote.showQr), 'vote.config:maxVoters': S.vote.maxVoters,
         'vote.config:joinUrl': S.vote.joinUrl, 'wheel.config:title': S.wheel.title,
+        'quiz.config:title': S.quiz.title, 'quiz.config:showNumber': String(S.quiz.showNumber),
+        'quiz.config:points': S.quiz.points, 'quiz.config:timerOn': String(S.quiz.timerOn), 'quiz.config:timerSec': S.quiz.timerSec,
+        'quiz.config:muted': String(S.quiz.muted), 'quiz.config:volume': S.quiz.volume,
         'subs.config:position': S.subtitles.position, 'subs.config:words': S.subtitles.words, 'subs.config:size': S.subtitles.size,
         'subs.config:hideAfter': S.subtitles.hideAfter, 'subs.config:highlight': S.subtitles.highlight,
         'clock.config:label': S.clock.label, 'clock.config:position': S.clock.position,
@@ -272,6 +280,7 @@
     for (const b of $$('[data-toggle]')) b.classList.toggle('on', !!S[b.dataset.toggle].visible);
     for (const d of $$('[data-dot]')) d.classList.toggle('on', !!S[d.dataset.dot].visible);
     setCfgInputs();
+    renderMacros();
 
     // Classifica
     const lb = S.leaderboard;
@@ -332,6 +341,7 @@
     renderTunnel();
     renderVote();
     renderWheel();
+    renderQuiz();
     renderSubsEngine();
 
     // Timer (form)
@@ -465,13 +475,13 @@
     return { livegfx: 'theme', version: 1, id: meta.id, name: meta.name,
       custom: { accent, accent2, accent3, panel, panelAlpha, text, textOnAccent, radius, font, glow, uppercase } };
   }
-  async function uploadTheme(body) {
+  async function uploadTheme(body, quiet) {
     try {
       const r = await fetch('/api/themes', { method: 'POST', headers: { 'X-Pin': pin, 'Content-Type': 'text/plain; charset=utf-8' }, body });
       const d = await r.json();
-      toast(d.ok ? `Tema "${d.theme.name}" pronto: lo trovi in Tema grafico` : d.error, !d.ok);
+      if (!quiet) toast(d.ok ? `Tema "${d.theme.name}" pronto: lo trovi in Tema grafico` : d.error, !d.ok);
       return d;
-    } catch { toast('Importazione non riuscita', true); return { ok: false }; }
+    } catch { if (!quiet) toast('Importazione non riuscita', true); return { ok: false, error: 'connessione' }; }
   }
   $('#customSave').addEventListener('click', async () => {
     const meta = await askThemeName('Salva tra i miei temi');
@@ -489,15 +499,33 @@
     document.body.appendChild(a); a.click(); a.remove();
     setTimeout(() => URL.revokeObjectURL(a.href), 2000);
   });
+  // Importazione di uno o più file insieme
   $('#themeImport').addEventListener('change', async (e) => {
-    const f = e.target.files[0]; if (!f) return;
-    if (f.size > 300 * 1024) { e.target.value = ''; return toast('File troppo grande per un tema', true); }
-    const text = await f.text();
-    let id = null;
-    try { id = text.trim().startsWith('{') ? JSON.parse(text).id : (/\[data-theme\s*=\s*["']([a-z0-9-]+)["']\]/i.exec(text) || [])[1]; } catch { /* lo dirà il server */ }
-    if (id && (S.userThemes || []).some((t) => t.id === id) && !confirm(`Esiste già un tema "${id}": sostituirlo?`)) { e.target.value = ''; return; }
-    await uploadTheme(text);
+    const files = [...e.target.files];
     e.target.value = '';
+    if (!files.length) return;
+    const items = [];
+    for (const f of files) {
+      if (f.size > 300 * 1024) { items.push({ name: f.name, error: 'file troppo grande' }); continue; }
+      const text = await f.text();
+      let id = null;
+      try { id = text.trim().startsWith('{') ? JSON.parse(text).id : (/\[data-theme\s*=\s*["']([a-z0-9-]+)["']\]/i.exec(text) || [])[1]; } catch { /* lo dirà il server */ }
+      items.push({ name: f.name, text, id });
+    }
+    // una sola domanda per tutti i temi che esistono già
+    const dup = items.filter((x) => x.id && (S.userThemes || []).some((t) => t.id === x.id));
+    let replace = true;
+    if (dup.length) replace = confirm(`${dup.length === 1 ? `Il tema "${dup[0].id}" esiste già` : `${dup.length} temi esistono già (${dup.map((x) => x.id).join(', ')})`}: sostituirli?\n\nOK = sostituisci · Annulla = salta quelli già presenti`);
+    let ok = 0; const errors = [];
+    for (const x of items) {
+      if (x.error) { errors.push(`${x.name}: ${x.error}`); continue; }
+      if (!replace && dup.includes(x)) continue;
+      const d = await uploadTheme(x.text, true);
+      if (d.ok) ok++; else errors.push(`${x.name}: ${d.error}`);
+    }
+    if (files.length === 1 && ok === 1) toast('Tema importato: lo trovi in Tema grafico');
+    else toast(`${ok} temi importati${errors.length ? `, ${errors.length} non riusciti` : ''}`, !!errors.length && !ok);
+    if (errors.length) setTimeout(() => alert('Non importati:\n\n' + errors.join('\n')), 300);
   });
 
   // ---------- Sfondi ----------
@@ -604,6 +632,358 @@
   if (store.get('livegfx.whDur')) { $('#whDur').value = store.get('livegfx.whDur'); $('#whDurOut').textContent = $('#whDur').value; }
   $('#whSpin').addEventListener('click', () => send({ type: 'wheel.spin', duration: Number($('#whDur').value) * 1000 }));
 
+
+
+  // ---------- Regia OBS ----------
+  let OBS = null; const obsThumbs = {};
+  let macroEditing = false, mSteps = [], volDrag = null;
+  function obsThumbsSync() {
+    const on = !!role && !document.hidden && store.get('livegfx.tab') === 'obs';
+    if (ws && ws.readyState === 1) ws.send(JSON.stringify({ t: 'thumbs', on }));
+  }
+  document.addEventListener('visibilitychange', obsThumbsSync);
+  const thumbUrl = (n) => obsThumbs[n] || '';
+  // volume: cursore 0–1 ⇄ moltiplicatore OBS, su scala in dB (−60…0) come il mixer di OBS
+  const pos2mul = (p) => (p <= 0.001 ? 0 : Math.pow(10, (60 * (p - 1)) / 20));
+  const mul2pos = (m) => (m <= 0.001 ? 0 : Math.max(0, Math.min(1, 1 + (20 * Math.log10(m)) / 60)));
+  const dbLabel = (m) => (m <= 0.001 ? '−∞ dB' : (20 * Math.log10(m)).toFixed(1).replace('-', '−') + ' dB');
+
+  function renderObs() {
+    const O = OBS;
+    $('#obsPill').textContent = O.connected ? 'OBS collegato' : 'OBS non collegato';
+    $('#obsPill').classList.toggle('ok', O.connected);
+    $('#obsDot').classList.toggle('ok', O.connected); $('#obsDot').classList.add('on');
+    $('#obsOff').hidden = O.connected; $('#obsMain').hidden = !O.connected;
+    $('#obsErr').textContent = O.error || 'In attesa di OBS…';
+    const f = $('#obsCfgForm');
+    if (document.activeElement?.form !== f) {
+      f.elements.host.value = O.host; f.elements.port.value = O.port;
+      f.elements.password.placeholder = O.hasPassword ? '•••••• (salvata, lascia vuoto per tenerla)' : 'nessuna password salvata';
+    }
+    if (!O.connected) { if (role === 'admin') $('#obsCfg').open = true; return; }
+
+    // monitor e transizione
+    const mon = $('#obsMon');
+    mon.classList.toggle('single', !O.studio);
+    mon.innerHTML = (O.studio ? `<figure class="pvw" data-scene="${esc(O.preview)}"><img alt=""><figcaption><b>ANTEPRIMA</b>${esc(O.preview)}</figcaption></figure>` : '')
+      + `<figure class="pgm" data-scene="${esc(O.program)}"><img alt=""><figcaption><b>IN ONDA</b>${esc(O.program)}</figcaption></figure>`;
+    const tsel = `<select id="obsTrans">${O.transitions.map((t) => `<option ${t === O.transition ? 'selected' : ''}>${esc(t)}</option>`).join('')}</select>`
+      + (O.fixed ? '' : `<input id="obsDur" type="number" min="50" max="20000" step="50" inputmode="numeric" value="${O.duration}" title="Durata in millisecondi"><span class="sub" style="color:var(--dim)">ms</span>`);
+    $('#obsStudioCtl').innerHTML = O.studio
+      ? `<button class="btn obs-take" type="button" id="obsTake">TRANSIZIONE ▶</button><div class="obs-trow">${tsel}</div>
+         <div class="row-btns" style="margin-top:8px"><button class="btn sm" type="button" data-obs-studio="0">Spegni modalità studio</button></div>`
+      : `<div class="obs-trow">${tsel}</div><p class="sub" style="color:var(--dim);font-size:13px;margin:8px 0 0">Modalità studio spenta in OBS: toccando una scena va <b>subito in onda</b>. Per scegliere prima in anteprima e poi mandare in onda con TRANSIZIONE, attivala.</p>
+         <div class="row-btns" style="margin-top:8px"><button class="btn primary sm" type="button" data-obs-studio="1">Attiva modalità studio</button></div>`;
+
+    // scene
+    $('#obsScenes').innerHTML = O.scenes.map((n) => {
+      const cls = n === O.program ? 'pgm' : O.studio && n === O.preview ? 'pvw' : '';
+      return `<button class="obs-tile ${cls}" type="button" data-scene="${esc(n)}"><div class="th"></div>${cls ? `<span class="tag">${cls === 'pgm' ? 'IN ONDA' : 'ANTEPRIMA'}</span>` : ''}<div class="nm">${esc(n)}</div></button>`;
+    }).join('') || '<div class="empty">Nessuna scena in OBS.</div>';
+
+    // audio
+    const aud = $('#obsAudio');
+    if (!volDrag) aud.innerHTML = O.inputs.length ? O.inputs.map((i) => `<div class="obs-aud${i.muted ? ' muted' : ''}" data-input="${esc(i.name)}">
+        <button class="btn mute${i.muted ? ' on' : ''}" type="button" data-mute="${esc(i.name)}">${i.muted ? '🔇' : '🔊'}</button>
+        <div class="an">${esc(i.name)}<span>${i.muted ? 'MUTO' : dbLabel(i.mul)}</span></div>
+        <input type="range" min="0" max="1000" value="${Math.round(mul2pos(i.mul) * 1000)}" data-vol="${esc(i.name)}"></div>`).join('')
+      : '<div class="empty">Nessuna fonte audio in OBS.</div>';
+
+    renderMacros(); renderObsThumbs();
+  }
+  function renderObsThumbs() {
+    for (const el of $$('#obsScenes .obs-tile')) { const u = thumbUrl(el.dataset.scene); if (u) el.querySelector('.th').style.backgroundImage = `url("${u}")`; }
+    for (const el of $$('#obsMon figure')) { const u = thumbUrl(el.dataset.scene); const img = el.querySelector('img'); if (u && img.src !== u) img.src = u; }
+  }
+
+  // tocchi su scene, transizione, studio, audio
+  $('#obsMain').addEventListener('click', async (e) => {
+    const t = e.target.closest('.obs-tile[data-scene]');
+    if (t) { send({ type: 'obs.preview', scene: t.dataset.scene }); return; }
+    if (e.target.closest('#obsTake')) { send({ type: 'obs.transition' }); return; }
+    const sm = e.target.closest('[data-obs-studio]');
+    if (sm) { send({ type: 'obs.studio', on: sm.dataset.obsStudio === '1' }); return; }
+    const mu = e.target.closest('[data-mute]');
+    if (mu) send({ type: 'obs.mute', input: mu.dataset.mute });
+  });
+  $('#obsMain').addEventListener('change', (e) => {
+    if (e.target.id === 'obsTrans') send({ type: 'obs.setTransition', name: e.target.value });
+    if (e.target.id === 'obsDur') send({ type: 'obs.setDuration', ms: Number(e.target.value) });
+  });
+  let volT = 0;
+  $('#obsMain').addEventListener('input', (e) => {
+    const v = e.target.closest('[data-vol]'); if (!v) return;
+    volDrag = v.dataset.vol;
+    const mul = pos2mul(v.value / 1000);
+    v.parentElement.querySelector('.an span').textContent = dbLabel(mul);
+    const now = Date.now(); if (now - volT > 90) { volT = now; send({ type: 'obs.volume', input: volDrag, mul }); }
+  });
+  $('#obsMain').addEventListener('change', (e) => {
+    const v = e.target.closest('[data-vol]'); if (!v) return;
+    send({ type: 'obs.volume', input: v.dataset.vol, mul: pos2mul(v.value / 1000) }).then(() => { volDrag = null; if (OBS) renderObs(); });
+  });
+
+  // collegamento
+  $('#obsCfgForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const f = e.target, a = { type: 'obs.config', host: f.elements.host.value, port: f.elements.port.value, enabled: true };
+    if (f.elements.password.value) a.password = f.elements.password.value;
+    const r = await send(a); if (r.ok) { f.elements.password.value = ''; toast('Collegamento a OBS…'); }
+  });
+  $('#obsDisconnect').addEventListener('click', () => send({ type: 'obs.config', enabled: false }));
+
+  // ---------- Tasti macro ----------
+  const GFX_PRESETS = [
+    ['Nascondi tutte le grafiche', { type: 'all.hide' }],
+    ['Copertura: mostra', { type: 'cover.show' }], ['Copertura: nascondi', { type: 'cover.hide' }],
+    ['Classifica: mostra', { type: 'lb.show' }], ['Classifica: nascondi', { type: 'lb.hide' }],
+    ['Squadre: mostra', { type: 'sb.show' }], ['Squadre: nascondi', { type: 'sb.hide' }],
+    ['Ospite: mostra quello in onda', { type: 'lt.show' }], ['Ospite: nascondi', { type: 'lt.hide' }],
+    ['Timer: mostra', { type: 'timer.show' }], ['Timer: nascondi', { type: 'timer.hide' }],
+    ['Timer: avvia', { type: 'timer.start' }], ['Timer: pausa', { type: 'timer.pause' }], ['Timer: azzera', { type: 'timer.reset' }],
+    ['Ticker: mostra', { type: 'tk.show' }], ['Ticker: nascondi', { type: 'tk.hide' }],
+    ['Annuncio: ripeti l\'ultimo', { type: 'an.show' }], ['Annuncio: nascondi', { type: 'an.hide' }],
+    ['Televoto: mostra', { type: 'vote.show' }], ['Televoto: nascondi', { type: 'vote.hide' }],
+    ['Televoto: apri il voto', { type: 'vote.open' }], ['Televoto: chiudi il voto', { type: 'vote.close' }], ['Televoto: rivela', { type: 'vote.reveal' }],
+    ['Quiz: mostra', { type: 'quiz.show' }], ['Quiz: nascondi', { type: 'quiz.hide' }],
+    ['Quiz: prossima domanda', { type: 'quiz.next' }], ['Quiz: rivela la risposta', { type: 'quiz.reveal' }],
+    ['Quiz: ultima domanda', { type: 'quiz.final' }], ['Quiz: avvia tempo', { type: 'quiz.timerStart' }],
+    ['Ruota: mostra', { type: 'wheel.show' }], ['Ruota: nascondi', { type: 'wheel.hide' }], ['Ruota: gira', { type: 'wheel.spin' }],
+    ['Sottotitoli: mostra', { type: 'subs.show' }], ['Sottotitoli: nascondi', { type: 'subs.hide' }],
+    ['Orologio: mostra', { type: 'clock.show' }], ['Orologio: nascondi', { type: 'clock.hide' }],
+  ];
+  const presetIndex = (act) => GFX_PRESETS.findIndex(([, a]) => a.type === act.type && Object.keys(act).length === 1);
+  function stepText(st) {
+    if (st.k === 'scene') return `🎬 ${st.to === 'preview' ? 'Anteprima' : 'In onda'}: ${st.scene}`;
+    if (st.k === 'transition') return '⏩ Transizione';
+    if (st.k === 'mute') return `${st.mode === 'on' ? '🔇 Muto' : st.mode === 'off' ? '🔊 Attiva' : '🔁 Inverti'}: ${st.input}`;
+    if (st.k === 'wait') return `⏳ ${st.s} s`;
+    return '✨ ' + (st.label || st.action.type);
+  }
+  function renderMacros() {
+    if (!S) return;
+    const L = S.macros || [], run = OBS && OBS.runningMacro;
+    const box = $('#obsMacros');
+    box.classList.toggle('editing', macroEditing);
+    box.innerHTML = L.map((m) => `<button class="obs-tile${run === m.id ? ' run' : ''}" type="button" data-macro="${m.id}" style="background:${m.color}" title="${esc(m.steps.map(stepText).join(' → '))}">
+        <div class="ic">${esc(m.icon || '▶')}</div><div class="nm">${esc(m.name)}</div></button>`).join('')
+      + (macroEditing ? '<button class="obs-tile add" type="button" data-macro-new><div class="ic">＋</div><div class="nm">Nuovo tasto</div></button>' : '')
+      + (!L.length && !macroEditing ? `<div class="empty" style="grid-column:1/-1">Nessun tasto. ${role === 'admin' ? 'Premi "✎ Modifica" per crearne uno.' : ''}</div>` : '');
+    $('#macroEditToggle').textContent = macroEditing ? '✓ Fine' : '✎ Modifica';
+  }
+  $('#macroEditToggle').addEventListener('click', () => { macroEditing = !macroEditing; if (!macroEditing) $('#macroForm').hidden = true; renderMacros(); });
+  $('#obsMacros').addEventListener('click', async (e) => {
+    if (e.target.closest('[data-macro-new]')) return openMacro(null);
+    const b = e.target.closest('[data-macro]'); if (!b) return;
+    if (macroEditing) return openMacro(S.macros.find((m) => m.id === b.dataset.macro));
+    const r = await send({ type: 'obs.macro', id: b.dataset.macro });
+    if (r.ok) toast('Fatto');
+  });
+  function openMacro(m) {
+    const f = $('#macroForm'); f.hidden = false;
+    f.elements.id.value = m ? m.id : ''; f.elements.name.value = m ? m.name : ''; f.elements.icon.value = m ? m.icon : '';
+    f.elements.color.value = m ? m.color : '#3B6BFF';
+    mSteps = m ? JSON.parse(JSON.stringify(m.steps)) : [];
+    $('#macroFormTitle').textContent = m ? `✎ Modifica "${m.name}"` : '➕ Nuovo tasto';
+    $('#macroDelete').hidden = !m;
+    renderSteps(); f.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+  const opt = (v, label, sel) => `<option value="${esc(v)}" ${sel ? 'selected' : ''}>${esc(label)}</option>`;
+  function renderSteps() {
+    const scenes = OBS?.scenes || [], inputs = (OBS?.inputs || []).map((i) => i.name);
+    const withCur = (list, v) => (v && !list.includes(v) ? [v, ...list] : list);
+    $('#macroSteps').innerHTML = mSteps.map((st, i) => {
+      let body = '';
+      if (st.k === 'scene') body = `<select data-f="scene">${withCur(scenes, st.scene).map((n) => opt(n, n, n === st.scene)).join('')}</select>
+        <select data-f="to">${opt('program', 'in onda', st.to !== 'preview')}${opt('preview', 'in anteprima', st.to === 'preview')}</select>`;
+      else if (st.k === 'transition') body = '<span style="flex:1">⏩ Transizione: l\'anteprima va in onda</span>';
+      else if (st.k === 'mute') body = `<select data-f="input">${withCur(inputs, st.input).map((n) => opt(n, n, n === st.input)).join('')}</select>
+        <select data-f="mode">${opt('on', 'muto', st.mode === 'on')}${opt('off', 'attiva', st.mode === 'off')}${opt('toggle', 'inverti', st.mode === 'toggle')}</select>`;
+      else if (st.k === 'wait') body = `<span>⏳ Attendi</span><input type="number" data-f="s" min="0.1" max="30" step="0.1" value="${st.s}"><span>secondi</span>`;
+      else if (st.k === 'gfx' && st.action.type === 'an.show' && st.action.title !== undefined) body = `<span>📣</span><input data-f="title" maxlength="60" placeholder="Testo dell'annuncio" value="${esc(st.action.title)}">`;
+      else if (st.k === 'gfx') { const pi = presetIndex(st.action); body = `<select data-f="preset">${pi < 0 ? opt(-1, st.label || st.action.type, true) : ''}${GFX_PRESETS.map(([l], j) => opt(j, l, j === pi)).join('')}</select>`; }
+      return `<div class="mstep" data-i="${i}"><span class="k">${i + 1}</span><div class="f">${body}</div>
+        <div class="b"><button class="btn sm" type="button" data-sm="up" ${i ? '' : 'disabled'}>↑</button><button class="btn sm" type="button" data-sm="down" ${i < mSteps.length - 1 ? '' : 'disabled'}>↓</button><button class="btn sm danger" type="button" data-sm="del">✕</button></div></div>`;
+    }).join('') || '<div class="empty">Nessun passo.</div>';
+  }
+  $('#macroAdd').addEventListener('change', (e) => {
+    const k = e.target.value; e.target.value = ''; if (!k) return;
+    const O = OBS || { scenes: [], inputs: [] };
+    if (k === 'scene') mSteps.push({ k, scene: O.scenes[0] || '', to: O.studio ? 'preview' : 'program' });
+    else if (k === 'transition') mSteps.push({ k });
+    else if (k === 'mute') mSteps.push({ k, input: O.inputs[0]?.name || '', mode: 'on' });
+    else if (k === 'wait') mSteps.push({ k, s: 1 });
+    else if (k === 'gfx') mSteps.push({ k, action: { ...GFX_PRESETS[0][1] }, label: GFX_PRESETS[0][0] });
+    else if (k === 'announce') mSteps.push({ k: 'gfx', action: { type: 'an.show', title: '' }, label: 'Annuncio' });
+    renderSteps();
+  });
+  $('#macroSteps').addEventListener('input', (e) => {
+    const row = e.target.closest('.mstep'); if (!row) return;
+    const st = mSteps[row.dataset.i], f = e.target.dataset.f, v = e.target.value;
+    if (f === 'preset') { const [l, a] = GFX_PRESETS[v] || []; if (a) { st.action = { ...a }; st.label = l; } }
+    else if (f === 'title') { st.action.title = v; st.label = 'Annuncio: ' + v; }
+    else if (f === 's') st.s = Number(v);
+    else if (f) st[f] = v;
+  });
+  $('#macroSteps').addEventListener('click', (e) => {
+    const b = e.target.closest('[data-sm]'); if (!b) return;
+    const i = Number(b.closest('.mstep').dataset.i);
+    if (b.dataset.sm === 'del') mSteps.splice(i, 1);
+    else { const j = b.dataset.sm === 'up' ? i - 1 : i + 1; [mSteps[i], mSteps[j]] = [mSteps[j], mSteps[i]]; }
+    renderSteps();
+  });
+  $('#macroForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const f = e.target;
+    const r = await send({ type: 'macro.save', id: f.elements.id.value || undefined, name: f.elements.name.value, icon: f.elements.icon.value, color: f.elements.color.value, steps: mSteps });
+    if (r.ok) { toast('Tasto salvato'); f.hidden = true; }
+  });
+  $('#macroCancel').addEventListener('click', () => { $('#macroForm').hidden = true; });
+  $('#macroDelete').addEventListener('click', async () => {
+    const id = $('#macroForm').elements.id.value;
+    if (!id || !confirm('Eliminare questo tasto?')) return;
+    const r = await send({ type: 'macro.remove', id }); if (r.ok) $('#macroForm').hidden = true;
+  });
+
+  // ---------- Quiz ----------
+  const LET = ['A', 'B', 'C', 'D'];
+  let qzEditing = null;
+  function renderQuiz() {
+    const Q = S.quiz, list = Q.questions, cur = list[Q.index];
+    $('#qzCount').textContent = list.length ? `(${list.length})` : '';
+    $('#qzLive').innerHTML = cur
+      ? `<div class="sub" style="color:var(--dim)">Domanda ${Q.index + 1} di ${list.length}${Q.revealed ? ' · rivelata' : Q.selected != null ? ' · risposta accesa: ' + LET[Q.selected] : ''}</div>
+         <div class="qz-q">${esc(cur.q)}</div>${cur.note ? `<div class="sub" style="color:var(--dim);font-size:13px">📝 ${esc(cur.note)}</div>` : ''}`
+      : '<div class="empty">Nessuna domanda. Scrivile qui sotto o generane un set con l\'IA.</div>';
+    $('#qzAnswers').innerHTML = cur ? cur.answers.map((t, i) => {
+      let cls = '';
+      if (Q.revealed) cls = i === cur.correct ? 'ok' : i === Q.selected ? 'ko' : '';
+      else if (Q.selected === i) cls = 'lit';
+      else if (Q.fifty.includes(i)) cls = 'gone';
+      return `<button class="btn ${cls}" data-a="quiz.select" data-answer="${i}" ${Q.revealed ? 'disabled' : ''}><b>${LET[i]}</b>${esc(t)}${i === cur.correct ? '<span class="chk">✓ giusta</span>' : ''}</button>`;
+    }).join('') : '';
+    $('#qzReveal').disabled = !cur || Q.revealed;
+    $('#qzFifty').disabled = !cur || Q.revealed || Q.fifty.length > 0;
+    $('#qzFinal').classList.toggle('on', !!Q.final);
+    $('#qzFinal').textContent = Q.final ? '🏆 Ultima domanda (attiva)' : '🏆 Ultima domanda';
+    $('#qzTimerBtn').hidden = !Q.timerOn;
+    // chi risponde: i partecipanti della classifica
+    const ents = S.leaderboard.entries;
+    const opts = `<option value="">— nessuno (niente punti) —</option>` + ents.map((e) => `<option value="${e.id}">${esc(e.name)} · ${e.score} pt</option>`).join('');
+    if ($('#qzWho').innerHTML !== opts) $('#qzWho').innerHTML = opts;
+    if (document.activeElement !== $('#qzWho')) $('#qzWho').value = Q.contestant && ents.some((e) => e.id === Q.contestant) ? Q.contestant : '';
+    if (Q.awarded) { const e = ents.find((x) => x.id === Q.awarded.id); $('#qzLive').innerHTML += `<div class="sub" style="color:var(--green);margin-top:6px">+${Q.awarded.pts} punti a ${esc(e ? e.name : '?')} (con "Rifai la domanda" si tolgono)</div>`; }
+    else if (!ents.length) $('#qzLive').innerHTML += `<div class="sub" style="color:var(--dim);font-size:13px;margin-top:6px">Per dare punti, aggiungi i concorrenti nella scheda Classifica.</div>`;
+    $('#qzUnselect').disabled = !cur || (Q.selected == null && !Q.revealed);
+    $('#qzUnselect').textContent = Q.revealed ? '↺ Rifai la domanda' : 'Spegni';
+    $('#qzList').innerHTML = list.length ? list.map((x, i) => `<div class="item qz-item${i === Q.index ? ' cur' : ''}"><div class="rank">${i + 1}</div>
+      <div><div class="name" style="white-space:normal">${esc(x.q)}</div><div class="sub" style="color:var(--dim);font-size:12px">Giusta: ${LET[x.correct]} — ${esc(x.answers[x.correct])}</div></div>
+      <div class="qz-btns"><button class="btn sm" data-a="quiz.goto" data-index="${i}" title="Vai a questa domanda">▶ Vai</button>
+      <button class="btn sm" data-a="quiz.move" data-id="${x.id}" data-dir="up" ${i ? '' : 'disabled'}>↑</button>
+      <button class="btn sm" data-a="quiz.move" data-id="${x.id}" data-dir="down" ${i < list.length - 1 ? '' : 'disabled'}>↓</button>
+      <button class="btn sm qz-edit-btn" type="button" data-qid="${x.id}">✎</button>
+      <button class="btn sm danger" data-a="quiz.remove" data-id="${x.id}" data-confirm="Eliminare questa domanda?">✕</button></div></div>`).join('')
+      : '<div class="empty">Il set è vuoto.</div>';
+    if (qzEditing && !list.some((x) => x.id === qzEditing)) resetQzForm();
+  }
+  function qzTimerRunning() { const Q = S.quiz; return !!(Q.timerOn && Q.timerAt && Q.timerLeft == null && Date.now() + offset - Q.timerAt < Q.timerSec * 1000); }
+  $('#qzWho').addEventListener('change', (e) => send({ type: 'quiz.contestant', id: e.target.value || null }));
+  $('#qzTimerBtn').addEventListener('click', () => send({ type: qzTimerRunning() ? 'quiz.timerStop' : 'quiz.timerStart' }));
+  setInterval(() => {
+    if (!S || !S.quiz) return;
+    const Q = S.quiz, el = $('#qzTime');
+    if (!Q.timerOn) { el.textContent = ''; return; }
+    const total = Q.timerSec * 1000;
+    const left = Math.max(0, Math.min(total, Q.timerLeft != null ? Q.timerLeft : Q.timerAt ? total - (Date.now() + offset - Q.timerAt) : total));
+    el.textContent = left <= 0 ? 'TEMPO!' : Math.ceil(left / 1000) + ' s';
+    el.classList.toggle('warn', left <= 5000);
+    const lbl = qzTimerRunning() ? '⏸ Ferma tempo' : left <= 0 ? '↺ Riavvia tempo' : '⏱ Avvia tempo';
+    if ($('#qzTimerBtn').textContent !== lbl) $('#qzTimerBtn').textContent = lbl;
+  }, 200);
+  // "Rifai la domanda" dopo la rivelazione = quiz.unselect (torna allo stato iniziale)
+  function resetQzForm() {
+    qzEditing = null; $('#qzForm').reset(); $('#qzForm').elements.id.value = '';
+    $('#qzFormTitle').textContent = '➕ Scrivi una domanda'; $('#qzSave').textContent = 'Aggiungi'; $('#qzCancel').hidden = true;
+  }
+  $('#qzList').addEventListener('click', (e) => {
+    const b = e.target.closest('.qz-edit-btn'); if (!b) return;
+    const x = S.quiz.questions.find((q) => q.id === b.dataset.qid); if (!x) return;
+    const f = $('#qzForm'); qzEditing = x.id;
+    f.elements.id.value = x.id; f.elements.q.value = x.q; f.elements.note.value = x.note || '';
+    x.answers.forEach((a, i) => { f.elements['a' + i].value = a; });
+    f.querySelector(`input[name=correct][value="${x.correct}"]`).checked = true;
+    $('#qzFormTitle').textContent = `✎ Modifica domanda ${S.quiz.questions.indexOf(x) + 1}`; $('#qzSave').textContent = 'Salva modifiche'; $('#qzCancel').hidden = false;
+    f.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+  $('#qzCancel').addEventListener('click', resetQzForm);
+  $('#qzForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const d = formData(e.target);
+    const body = { q: d.q, answers: [d.a0, d.a1, d.a2, d.a3], correct: Number(d.correct), note: d.note };
+    const r = await send(qzEditing ? { type: 'quiz.update', id: qzEditing, ...body } : { type: 'quiz.add', ...body });
+    if (r.ok) { toast(qzEditing ? 'Domanda modificata' : 'Domanda aggiunta'); resetQzForm(); }
+  });
+
+  // Prompt per l'IA
+  function qzPrompt() {
+    const n = Math.min(50, Math.max(3, Number($('#qzN').value) || 10));
+    const topic = $('#qzTopic').value.trim() || 'cultura generale';
+    return `Crea un set di ${n} domande per un quiz televisivo a risposta multipla, in italiano.
+Argomento: ${topic}
+Difficoltà: ${$('#qzDiff').value}
+Pubblico: ${$('#qzAudience').value.trim() || 'pubblico generale'}
+
+Regole:
+- Ogni domanda ha esattamente 4 risposte e UNA SOLA è corretta, senza ambiguità.
+- Le risposte sbagliate devono essere plausibili, dello stesso tipo della giusta (niente risposte palesemente assurde).
+- Domanda al massimo 140 caratteri, ogni risposta al massimo 50 caratteri.
+- Niente fatti che cambiano nel tempo (record attuali, "l'ultimo", cariche in corso) e niente domande opinabili.
+- Varia la posizione della risposta corretta (non sempre la stessa lettera).
+- "spiegazione": una frase breve che conferma perché la risposta è giusta.
+
+Rispondi SOLO con JSON valido, senza testo prima o dopo, in questo formato:
+{"titolo":"Titolo breve del quiz","domande":[{"domanda":"...","risposte":["...","...","...","..."],"corretta":"B","spiegazione":"..."}]}`;
+  }
+  $('#qzCopy').addEventListener('click', async () => {
+    const txt = qzPrompt(), ta = $('#qzPrompt');
+    ta.value = txt; ta.hidden = false;
+    try { await navigator.clipboard.writeText(txt); toast('Prompt copiato: incollalo nella chat dell\'IA'); }
+    catch { ta.focus(); ta.select(); toast('Seleziona il testo qui sotto e copialo (Cmd+C)'); }
+  });
+  function parseQuizJson(raw) {
+    let t = String(raw || '').replace(/```(?:json)?/gi, '').trim();
+    const a = t.indexOf('{'), b = t.lastIndexOf('}'), c = t.indexOf('['), d = t.lastIndexOf(']');
+    let data;
+    try { data = JSON.parse(t); } catch {
+      try { data = JSON.parse(c >= 0 && (a < 0 || c < a) ? t.slice(c, d + 1) : t.slice(a, b + 1)); } catch { throw new Error('Non è JSON valido: copia tutta la risposta dell\'IA'); }
+    }
+    const questions = Array.isArray(data) ? data : data.domande || data.questions;
+    if (!Array.isArray(questions) || !questions.length) throw new Error('Nel testo non trovo l\'elenco "domande"');
+    return { title: Array.isArray(data) ? undefined : data.titolo || data.title, questions };
+  }
+  async function loadQuiz(raw, mode, source) {
+    let p; try { p = parseQuizJson(raw); } catch (err) { toast(err.message, true); return false; }
+    if (mode === 'set' && S.quiz.questions.length && !confirm(`Sostituire le ${S.quiz.questions.length} domande attuali con le ${p.questions.length} nuove?`)) return false;
+    const r = await send(mode === 'set' ? { type: 'quiz.set', title: p.title, questions: p.questions } : { type: 'quiz.append', questions: p.questions });
+    if (!r.ok) return false;
+    const total = mode === 'set' ? p.questions.length : null;
+    toast(`${source}: domande caricate. Controlla nell'elenco che le risposte giuste siano corrette.`);
+    return true;
+  }
+  $('#qzLoadReplace').addEventListener('click', async () => { if (await loadQuiz($('#qzPaste').value, 'set', 'IA')) $('#qzPaste').value = ''; });
+  $('#qzLoadAppend').addEventListener('click', async () => { if (await loadQuiz($('#qzPaste').value, 'append', 'IA')) $('#qzPaste').value = ''; });
+  $('#qzImportFile').addEventListener('change', async (e) => {
+    const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+    await loadQuiz(await f.text(), 'set', f.name);
+  });
+  $('#qzExport').addEventListener('click', () => {
+    const Q = S.quiz; if (!Q.questions.length) return toast('Il set è vuoto', true);
+    const data = { titolo: Q.title, domande: Q.questions.map((x) => ({ domanda: x.q, risposte: x.answers, corretta: LET[x.correct], spiegazione: x.note || '' })) };
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }));
+    a.download = `quiz-${slug(Q.title || 'set')}.json`; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  });
+
   // ---------- Sottotitoli ----------
   function renderSubsEngine() {
     const el = $('#stEngine');
@@ -636,7 +1016,7 @@
   async function loadInfo() {
     const base = `${location.protocol}//${location.host}`;
     const gfx = [['Overlay unico (tutte)', 'overlay'], ['Classifica', 'leaderboard'], ['Ospiti', 'lowerthird'], ['Squadre', 'scoreboard'],
-      ['Timer', 'timer'], ['Ticker', 'ticker'], ['Annuncio', 'announce'], ['Televoto', 'vote'], ['Ruota', 'wheel'],
+      ['Timer', 'timer'], ['Ticker', 'ticker'], ['Annuncio', 'announce'], ['Televoto', 'vote'], ['Ruota', 'wheel'], ['Quiz', 'quiz'],
       ['Sottotitoli', 'subtitles'], ['Orologio', 'clock']];
     const obsBase = `http://localhost:${location.port || 80}`;
     $('#gfxLinks').innerHTML = gfx.map(([n, f]) => `<div class="link"><b>${n}</b><span>${obsBase}/gfx/${f}.html</span></div>`).join('')

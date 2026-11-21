@@ -1,0 +1,43 @@
+/* LiveGFX tema: Neon da insegna */
+/* Tubi luminosi rosa e ciano su muro di mattoni, con qualche sfarfallio.
+   Si importa dal pannello: Impostazioni → I miei temi → Importa. */
+
+[data-theme="insegna"] {
+  --yellow: #FFE53B;
+  --green: #39FF88;
+  --cyan: #2BFFF8;
+  --magenta: #FF3CAC;
+  --orange: #FF8A3C;
+  --white: #FFFFFF;
+  --accent: #FF3CAC;
+  --accent-2: #2BFFF8;
+  --accent-3: #FFE53B;
+  --danger: #FF3B4E;
+  --panel: rgba(40,16,14,.95);
+  --panel-2: rgba(62,26,22,.96);
+  --line: rgba(255,255,255,.10);
+  --text: #FFFFFF;
+  --text-dim: rgba(255,220,230,.7);
+  --text-on-accent: #1A0606;
+  --glow: 1;
+  --accent-glow: rgba(255,60,172,.9);
+  --accent2-glow: rgba(43,255,248,.7);
+  --accent2-edge: #2BFFF8;
+  --radius: 14px;
+  --font-display: 'Monoton', 'Inter', sans-serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+  --display-case: uppercase;
+}
+[data-theme="insegna"] .neon-edge { box-shadow: 0 0 0 3px #2BFFF8, 0 0 18px rgba(43,255,248,.9), inset 0 0 18px rgba(43,255,248,.35), 0 20px 50px rgba(0,0,0,.6); }
+[data-theme="insegna"] .head::after, [data-theme="insegna"] #tk::before, [data-theme="insegna"] .question::after, [data-theme="insegna"] #an .line { background: #FF3CAC; box-shadow: none; }
+[data-theme="insegna"] #lt .bar { background: #FF3CAC; box-shadow: none; }
+[data-theme="insegna"] #board .head, [data-theme="insegna"] #board .rows, [data-theme="insegna"] #lt .box, [data-theme="insegna"] #tm, [data-theme="insegna"] #tk, [data-theme="insegna"] #ck, [data-theme="insegna"] #vt .card, [data-theme="insegna"] #win .box, [data-theme="insegna"] #sb .teams { background-image: repeating-linear-gradient(0deg, rgba(0,0,0,.35) 0 2px, transparent 2px 26px), repeating-linear-gradient(90deg, rgba(0,0,0,.3) 0 2px, transparent 2px 54px); }
+[data-theme="insegna"] #lt .tag, [data-theme="insegna"] #tk .label, [data-theme="insegna"] #tm .label, [data-theme="insegna"] #ck .label, [data-theme="insegna"] #board .live, [data-theme="insegna"] #sb .title, [data-theme="insegna"] #an .kicker { font-family: 'Inter', system-ui, sans-serif; }
+[data-theme="insegna"] .glow-accent, [data-theme="insegna"] #lt .name {
+  color: #FFE6F4; text-shadow: 0 0 4px #fff, 0 0 12px #FF3CAC, 0 0 26px #FF3CAC, 0 0 48px #FF3CAC; animation: ns-flicker 7s steps(1) infinite; }
+@keyframes ns-flicker { 0%, 88%, 91%, 100% { opacity: 1; } 89% { opacity: .45; } 90% { opacity: .95; } }
+[data-theme="insegna"] .head::after, [data-theme="insegna"] #tk::before { box-shadow: 0 0 12px #FF3CAC, 0 0 24px #FF3CAC; }
+/* Monoton è un font da insegna: solo per i titoli grandi, il resto in Inter */
+[data-theme="insegna"] #board .name, [data-theme="insegna"] .score, [data-theme="insegna"] .rank, [data-theme="insegna"] .tname, [data-theme="insegna"] .tscore,
+[data-theme="insegna"] #tm .time, [data-theme="insegna"] #ck .time, [data-theme="insegna"] .opt .text, [data-theme="insegna"] .opt .pct, [data-theme="insegna"] .opt .letter {
+  font-family: 'Inter', system-ui, sans-serif; font-weight: 800; }

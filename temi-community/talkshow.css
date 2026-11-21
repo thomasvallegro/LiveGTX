@@ -1,0 +1,38 @@
+/* LiveGFX tema: Talk show */
+/* Legno caldo, oro tenue, titoli con grazie: salotto televisivo.
+   Si importa dal pannello: Impostazioni → I miei temi → Importa. */
+
+[data-theme="talkshow"] {
+  --yellow: #D9A85B;
+  --green: #9BB07A;
+  --cyan: #E8D5B5;
+  --magenta: #C8553D;
+  --orange: #D98E4A;
+  --white: #FFFFFF;
+  --accent: #D9A85B;
+  --accent-2: #E8D5B5;
+  --accent-3: #B5562F;
+  --danger: #FF3B4E;
+  --panel: rgba(43,26,16,.94);
+  --panel-2: rgba(70,44,26,.95);
+  --line: rgba(232,213,181,.14);
+  --text: #FFF6E8;
+  --text-dim: rgba(255,240,215,.7);
+  --text-on-accent: #2B1A10;
+  --glow: .2;
+  --accent-glow: rgba(217,168,91,.3);
+  --accent2-glow: transparent;
+  --accent2-edge: rgba(217,168,91,.5);
+  --radius: 10px;
+  --font-display: 'DM Serif Display', 'Inter', sans-serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+  --display-case: none;
+}
+[data-theme="talkshow"] .neon-edge { box-shadow: 0 0 0 1px rgba(217,168,91,.55), 0 18px 44px rgba(0,0,0,.45); }
+[data-theme="talkshow"] .head::after, [data-theme="talkshow"] #tk::before, [data-theme="talkshow"] .question::after, [data-theme="talkshow"] #an .line { background: linear-gradient(90deg, transparent, #D9A85B 20%, #F3DFA8 50%, #D9A85B 80%, transparent); box-shadow: none; }
+[data-theme="talkshow"] #lt .bar { background: linear-gradient(90deg, transparent, #D9A85B 20%, #F3DFA8 50%, #D9A85B 80%, transparent); box-shadow: none; }
+[data-theme="talkshow"] #board .head, [data-theme="talkshow"] #board .rows, [data-theme="talkshow"] #lt .box, [data-theme="talkshow"] #tm, [data-theme="talkshow"] #tk, [data-theme="talkshow"] #ck, [data-theme="talkshow"] #vt .card, [data-theme="talkshow"] #win .box, [data-theme="talkshow"] #sb .teams { background-image: repeating-linear-gradient(90deg, rgba(255,255,255,.025) 0 2px, transparent 2px 9px), linear-gradient(180deg, rgba(255,255,255,.05), transparent); }
+[data-theme="talkshow"] #lt .tag, [data-theme="talkshow"] #tk .label, [data-theme="talkshow"] #tm .label, [data-theme="talkshow"] #ck .label, [data-theme="talkshow"] #board .live, [data-theme="talkshow"] #sb .title, [data-theme="talkshow"] #an .kicker { font-family: 'Inter', system-ui, sans-serif; }
+[data-theme="talkshow"] #lt .tag, [data-theme="talkshow"] #tk .label, [data-theme="talkshow"] #tm .label, [data-theme="talkshow"] #ck .label, [data-theme="talkshow"] #board .live, [data-theme="talkshow"] #sb .title, [data-theme="talkshow"] #an .kicker { font-family: 'Inter', sans-serif; font-weight: 600; letter-spacing: .22em; }
+[data-theme="talkshow"] .display { font-weight: 900; }
+[data-theme="talkshow"] .name, [data-theme="talkshow"] .tname, [data-theme="talkshow"] .opt .text { font-family: var(--font-display); text-transform: none; }

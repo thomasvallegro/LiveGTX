@@ -8,6 +8,33 @@
 @font-face { font-family: 'Playfair Display'; font-weight: 900; src: url('../vendor/fonts/playfair-display-latin-900-normal.woff2') format('woff2'); }
 @font-face { font-family: 'Press Start 2P'; font-weight: 400 900; src: url('../vendor/fonts/press-start-2p-latin-400-normal.woff2') format('woff2'); }
 @font-face { font-family: 'VT323'; font-weight: 400 900; src: url('../vendor/fonts/vt323-latin-400-normal.woff2') format('woff2'); }
+/* Libreria di font per i temi (licenza OFL, tutti offline). Si caricano solo quando un tema li usa. */
+@font-face { font-family: 'Barlow Condensed'; font-weight: 100 900; font-display: block; src: url('../vendor/fonts/barlow-condensed-latin-700-normal.woff2') format('woff2'); }
+@font-face { font-family: 'DM Serif Display'; font-weight: 100 900; font-display: block; src: url('../vendor/fonts/dm-serif-display-latin-400-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Exo 2'; font-weight: 100 900; font-display: block; src: url('../vendor/fonts/exo-2-latin-800-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Oswald'; font-weight: 100 900; font-display: block; src: url('../vendor/fonts/oswald-latin-700-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Bowlby One'; font-weight: 100 900; font-display: block; src: url('../vendor/fonts/bowlby-one-latin-400-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Righteous'; font-weight: 100 900; font-display: block; src: url('../vendor/fonts/righteous-latin-400-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Special Elite'; font-weight: 100 900; font-display: block; src: url('../vendor/fonts/special-elite-latin-400-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Limelight'; font-weight: 100 900; font-display: block; src: url('../vendor/fonts/limelight-latin-400-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Cinzel'; font-weight: 100 900; font-display: block; src: url('../vendor/fonts/cinzel-latin-700-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Black Ops One'; font-weight: 100 900; font-display: block; src: url('../vendor/fonts/black-ops-one-latin-400-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Orbitron'; font-weight: 100 900; font-display: block; src: url('../vendor/fonts/orbitron-latin-800-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Bangers'; font-weight: 100 900; font-display: block; src: url('../vendor/fonts/bangers-latin-400-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Fredoka'; font-weight: 100 900; font-display: block; src: url('../vendor/fonts/fredoka-latin-600-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Alfa Slab One'; font-weight: 100 900; font-display: block; src: url('../vendor/fonts/alfa-slab-one-latin-400-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Cormorant Garamond'; font-weight: 100 900; font-display: block; src: url('../vendor/fonts/cormorant-garamond-latin-700-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Monoton'; font-weight: 100 900; font-display: block; src: url('../vendor/fonts/monoton-latin-400-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Space Grotesk'; font-weight: 100 900; font-display: block; src: url('../vendor/fonts/space-grotesk-latin-700-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Audiowide'; font-weight: 100 900; font-display: block; src: url('../vendor/fonts/audiowide-latin-400-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Quicksand'; font-weight: 100 900; font-display: block; src: url('../vendor/fonts/quicksand-latin-700-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Bebas Neue'; font-weight: 100 900; font-display: block; src: url('../vendor/fonts/bebas-neue-latin-400-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Bodoni Moda'; font-weight: 100 900; font-display: block; src: url('../vendor/fonts/bodoni-moda-latin-700-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Lexend'; font-weight: 100 900; font-display: block; src: url('../vendor/fonts/lexend-latin-700-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Permanent Marker'; font-weight: 100 900; font-display: block; src: url('../vendor/fonts/permanent-marker-latin-400-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Michroma'; font-weight: 100 900; font-display: block; src: url('../vendor/fonts/michroma-latin-400-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Stardos Stencil'; font-weight: 100 900; font-display: block; src: url('../vendor/fonts/stardos-stencil-latin-700-normal.woff2') format('woff2'); }
+@font-face { font-family: 'Grenze Gotisch'; font-weight: 100 900; font-display: block; src: url('../vendor/fonts/grenze-gotisch-latin-700-normal.woff2') format('woff2'); }
 
 /* TEMA NEON (default): giallo – verde – azzurro */
 :root, [data-theme="neon"] {

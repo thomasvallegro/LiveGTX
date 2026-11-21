@@ -1,0 +1,40 @@
+/* LiveGFX tema: Quiz show */
+/* Blu elettrico e oro, bordi luminosi: la tensione della domanda da un milione.
+   Si importa dal pannello: Impostazioni → I miei temi → Importa. */
+
+[data-theme="quizshow"] {
+  --yellow: #FFC629;
+  --green: #3BE37F;
+  --cyan: #2E7BFF;
+  --magenta: #C44BFF;
+  --orange: #FF8A1F;
+  --white: #FFFFFF;
+  --accent: #FFC629;
+  --accent-2: #2E7BFF;
+  --accent-3: #7FE3FF;
+  --danger: #FF3B4E;
+  --panel: rgba(6,12,56,.94);
+  --panel-2: rgba(18,36,120,.95);
+  --line: rgba(255,255,255,.10);
+  --text: #FFFFFF;
+  --text-dim: rgba(200,215,255,.7);
+  --text-on-accent: #06123A;
+  --glow: .9;
+  --accent-glow: rgba(255,198,41,.6);
+  --accent2-glow: rgba(46,123,255,.6);
+  --accent2-edge: rgba(255,198,41,.8);
+  --radius: 16px;
+  --font-display: 'Exo 2', 'Inter', sans-serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+  --display-case: uppercase;
+}
+[data-theme="quizshow"] .neon-edge { box-shadow: 0 0 0 3px #FFC629, 0 0 28px rgba(46,123,255,.65), 0 0 60px rgba(46,123,255,.3); }
+[data-theme="quizshow"] .head::after, [data-theme="quizshow"] #tk::before, [data-theme="quizshow"] .question::after, [data-theme="quizshow"] #an .line { background: linear-gradient(90deg, #2E7BFF, #FFC629, #2E7BFF); box-shadow: none; }
+[data-theme="quizshow"] #lt .bar { background: linear-gradient(90deg, #2E7BFF, #FFC629, #2E7BFF); box-shadow: none; }
+[data-theme="quizshow"] #board .head, [data-theme="quizshow"] #board .rows, [data-theme="quizshow"] #lt .box, [data-theme="quizshow"] #tm, [data-theme="quizshow"] #tk, [data-theme="quizshow"] #ck, [data-theme="quizshow"] #vt .card, [data-theme="quizshow"] #win .box, [data-theme="quizshow"] #sb .teams { background-image: radial-gradient(ellipse at 50% -20%, rgba(46,123,255,.45), transparent 60%); }
+[data-theme="quizshow"] #lt .tag, [data-theme="quizshow"] #tk .label, [data-theme="quizshow"] #tm .label, [data-theme="quizshow"] #ck .label, [data-theme="quizshow"] #board .live, [data-theme="quizshow"] #sb .title, [data-theme="quizshow"] #an .kicker { font-family: 'Inter', system-ui, sans-serif; }
+[data-theme="quizshow"] .opt { border-radius: 999px; box-shadow: inset 0 0 0 2px rgba(255,198,41,.6); }
+[data-theme="quizshow"] .opt .letter { border-radius: 999px 0 0 999px; }
+[data-theme="quizshow"] .opt.win { box-shadow: 0 0 0 4px #FFC629, 0 0 40px rgba(255,198,41,.7); }
+[data-theme="quizshow"] #tm.warn .time { animation: qz-pulse .5s ease-in-out infinite alternate; }
+@keyframes qz-pulse { from { text-shadow: 0 0 6px rgba(255,59,78,.4); } to { text-shadow: 0 0 26px rgba(255,59,78,1); } }

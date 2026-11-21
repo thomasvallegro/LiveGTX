@@ -1,0 +1,38 @@
+/* LiveGFX tema: Legno */
+/* Tavole calde con venature, testi incisi, ottone.
+   Si importa dal pannello: Impostazioni → I miei temi → Importa. */
+
+[data-theme="legno"] {
+  --yellow: #F2C14E;
+  --green: #8DB580;
+  --cyan: #E8DCC4;
+  --magenta: #C8553D;
+  --orange: #E0913F;
+  --white: #FFFFFF;
+  --accent: #F2C14E;
+  --accent-2: #E8DCC4;
+  --accent-3: #9C6B3C;
+  --danger: #FF3B4E;
+  --panel: rgba(74,44,26,.96);
+  --panel-2: rgba(98,60,36,.97);
+  --line: rgba(0,0,0,.25);
+  --text: #FFF8EC;
+  --text-dim: rgba(255,240,220,.7);
+  --text-on-accent: #3A220F;
+  --glow: 0;
+  --accent-glow: transparent;
+  --accent2-glow: transparent;
+  --accent2-edge: rgba(255,255,255,.15);
+  --radius: 8px;
+  --font-display: 'Alfa Slab One', 'Inter', sans-serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+  --display-case: uppercase;
+}
+[data-theme="legno"] .neon-edge { box-shadow: inset 0 1px 0 rgba(255,255,255,.12), 0 0 0 2px #2E1A0C, 0 16px 40px rgba(0,0,0,.5); }
+[data-theme="legno"] .head::after, [data-theme="legno"] #tk::before, [data-theme="legno"] .question::after, [data-theme="legno"] #an .line { background: linear-gradient(90deg, #B8862F, #F2C14E, #B8862F); box-shadow: none; }
+[data-theme="legno"] #lt .bar { background: linear-gradient(90deg, #B8862F, #F2C14E, #B8862F); box-shadow: none; }
+[data-theme="legno"] #board .head, [data-theme="legno"] #board .rows, [data-theme="legno"] #lt .box, [data-theme="legno"] #tm, [data-theme="legno"] #tk, [data-theme="legno"] #ck, [data-theme="legno"] #vt .card, [data-theme="legno"] #win .box, [data-theme="legno"] #sb .teams { background-image: repeating-linear-gradient(92deg, rgba(0,0,0,.08) 0 3px, transparent 3px 11px, rgba(255,255,255,.035) 11px 13px, transparent 13px 23px), linear-gradient(180deg, rgba(255,255,255,.06), rgba(0,0,0,.12)); }
+[data-theme="legno"] #lt .tag, [data-theme="legno"] #tk .label, [data-theme="legno"] #tm .label, [data-theme="legno"] #ck .label, [data-theme="legno"] #board .live, [data-theme="legno"] #sb .title, [data-theme="legno"] #an .kicker { font-family: 'Inter', system-ui, sans-serif; }
+[data-theme="legno"] .display, [data-theme="legno"] .name, [data-theme="legno"] .score, [data-theme="legno"] .time {
+  text-shadow: 0 -1px 0 rgba(0,0,0,.65), 0 1px 0 rgba(255,255,255,.18); }
+[data-theme="legno"] .tag, [data-theme="legno"] .label { background: linear-gradient(180deg, #F6D57A, #C9952F); }

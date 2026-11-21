@@ -1,0 +1,41 @@
+/* LiveGFX tema: RPG fantasy */
+/* Pergamena, bordi dorati, sigillo di ceralacca: finestre da gioco di ruolo.
+   Si importa dal pannello: Impostazioni → I miei temi → Importa. */
+
+[data-theme="rpg"] {
+  --yellow: #B8860B;
+  --green: #2F5D3A;
+  --cyan: #2B5D8C;
+  --magenta: #8B1E1E;
+  --orange: #B5651D;
+  --white: #FFFFFF;
+  --accent: #8B1E1E;
+  --accent-2: #B8860B;
+  --accent-3: #2F5D3A;
+  --danger: #FF3B4E;
+  --panel: rgba(236,220,178,.97);
+  --panel-2: #E2CC98;
+  --line: rgba(59,36,16,.18);
+  --text: #3B2410;
+  --text-dim: rgba(59,36,16,.65);
+  --text-on-accent: #FFF4D6;
+  --glow: 0;
+  --accent-glow: transparent;
+  --accent2-glow: transparent;
+  --accent2-edge: rgba(255,255,255,.15);
+  --radius: 6px;
+  --font-display: 'Cinzel', 'Inter', sans-serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+  --display-case: none;
+}
+[data-theme="rpg"] .neon-edge { box-shadow: 0 0 0 3px #B8860B, 0 0 0 6px #3B2410, 0 0 0 8px #B8860B, 0 16px 40px rgba(0,0,0,.45); }
+[data-theme="rpg"] .head::after, [data-theme="rpg"] #tk::before, [data-theme="rpg"] .question::after, [data-theme="rpg"] #an .line { background: linear-gradient(90deg, transparent, #B8860B 15%, #8B1E1E 50%, #B8860B 85%, transparent); box-shadow: none; }
+[data-theme="rpg"] #lt .bar { background: linear-gradient(90deg, transparent, #B8860B 15%, #8B1E1E 50%, #B8860B 85%, transparent); box-shadow: none; }
+[data-theme="rpg"] #board .head, [data-theme="rpg"] #board .rows, [data-theme="rpg"] #lt .box, [data-theme="rpg"] #tm, [data-theme="rpg"] #tk, [data-theme="rpg"] #ck, [data-theme="rpg"] #vt .card, [data-theme="rpg"] #win .box, [data-theme="rpg"] #sb .teams { background-image: radial-gradient(ellipse at 30% 20%, rgba(255,255,255,.35), transparent 60%), radial-gradient(ellipse at 80% 90%, rgba(120,80,30,.18), transparent 55%); }
+[data-theme="rpg"] #lt .tag, [data-theme="rpg"] #tk .label, [data-theme="rpg"] #tm .label, [data-theme="rpg"] #ck .label, [data-theme="rpg"] #board .live, [data-theme="rpg"] #sb .title, [data-theme="rpg"] #an .kicker { font-family: 'Inter', system-ui, sans-serif; }
+[data-theme="rpg"] #an .backdrop { background: radial-gradient(ellipse at center, var(--panel) 0, var(--panel-2) 60%, rgba(0,0,0,.25) 100%); }
+[data-theme="rpg"] .opt .text, [data-theme="rpg"] .opt .val { text-shadow: none; }
+[data-theme="rpg"] [class*="c-"] { --c-glow: transparent; }
+[data-theme="rpg"] .display { font-weight: 900; }
+[data-theme="rpg"] .name, [data-theme="rpg"] .tname, [data-theme="rpg"] .opt .text { font-family: var(--font-display); text-transform: none; }
+[data-theme="rpg"] #board .title, [data-theme="rpg"] #an .title { color: #8B1E1E; }

@@ -1,0 +1,45 @@
+/* LiveGFX tema: Tempesta */
+/* Grigi di nuvola, pioggia obliqua e lampi improvvisi.
+   Si importa dal pannello: Impostazioni → I miei temi → Importa. */
+
+[data-theme="tempesta"] {
+  --yellow: #FFD43B;
+  --green: #8CE99A;
+  --cyan: #A5D8FF;
+  --magenta: #D0BFFF;
+  --orange: #FFA94D;
+  --white: #FFFFFF;
+  --accent: #FFD43B;
+  --accent-2: #E8F1FF;
+  --accent-3: #7A8BA0;
+  --danger: #FF3B4E;
+  --panel: rgba(28,32,38,.95);
+  --panel-2: rgba(44,50,60,.96);
+  --line: rgba(255,255,255,.10);
+  --text: #EEF2F7;
+  --text-dim: rgba(220,228,240,.65);
+  --text-on-accent: #14181E;
+  --glow: 0;
+  --accent-glow: transparent;
+  --accent2-glow: transparent;
+  --accent2-edge: rgba(255,255,255,.15);
+  --radius: 4px;
+  --font-display: 'Bebas Neue', 'Inter', sans-serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+  --display-case: uppercase;
+}
+[data-theme="tempesta"] .neon-edge { box-shadow: 0 0 0 1px rgba(232,241,255,.25), 0 18px 44px rgba(0,0,0,.55); }
+[data-theme="tempesta"] .head::after, [data-theme="tempesta"] #tk::before, [data-theme="tempesta"] .question::after, [data-theme="tempesta"] #an .line { background: linear-gradient(90deg, #7A8BA0, #E8F1FF, #7A8BA0); box-shadow: none; }
+[data-theme="tempesta"] #lt .bar { background: linear-gradient(90deg, #7A8BA0, #E8F1FF, #7A8BA0); box-shadow: none; }
+[data-theme="tempesta"] #board .head, [data-theme="tempesta"] #board .rows, [data-theme="tempesta"] #lt .box, [data-theme="tempesta"] #tm, [data-theme="tempesta"] #tk, [data-theme="tempesta"] #ck, [data-theme="tempesta"] #vt .card, [data-theme="tempesta"] #win .box, [data-theme="tempesta"] #sb .teams { background-image: repeating-linear-gradient(100deg, rgba(255,255,255,.05) 0 1px, transparent 1px 8px), linear-gradient(180deg, rgba(0,0,0,.25), transparent 60%); }
+[data-theme="tempesta"] #lt .tag, [data-theme="tempesta"] #tk .label, [data-theme="tempesta"] #tm .label, [data-theme="tempesta"] #ck .label, [data-theme="tempesta"] #board .live, [data-theme="tempesta"] #sb .title, [data-theme="tempesta"] #an .kicker { font-family: 'Inter', system-ui, sans-serif; }
+[data-theme="tempesta"] .neon-edge { animation: tp-flash 9s steps(1) infinite; }
+@keyframes tp-flash {
+  0%, 93%, 95.5%, 100% { box-shadow: 0 0 0 1px rgba(232,241,255,.25), 0 18px 44px rgba(0,0,0,.55); }
+  94%, 96% { box-shadow: 0 0 0 2px #E8F1FF, 0 0 60px rgba(232,241,255,.85), 0 18px 44px rgba(0,0,0,.55); } }
+[data-theme="tempesta"] #board .title, [data-theme="tempesta"] #an .title { color: #E8F1FF; }
+[data-theme="tempesta"] #board .title { font-size: 66px; letter-spacing: .03em; }
+[data-theme="tempesta"] .row .name { font-size: 42px; letter-spacing: .03em; }
+[data-theme="tempesta"] .rank, [data-theme="tempesta"] .score { font-size: 50px; }
+[data-theme="tempesta"] #lt .name { font-size: 80px; letter-spacing: .02em; }
+[data-theme="tempesta"] #tm .time, [data-theme="tempesta"] #ck .time { font-size: 74px; }

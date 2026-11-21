@@ -35,6 +35,7 @@
   <div id="previewWrap" class="preview" hidden><div class="preview-inner"><iframe id="previewFrame" title="Anteprima"></iframe></div></div>
 
   <nav class="tabs" id="tabs">
+    <button data-tab="obs">🎛️<span>OBS</span><i class="onair-dot obs-dot" id="obsDot"></i></button>
     <button data-tab="lb" class="active">🏆<span>Classifica</span><i class="onair-dot" data-dot="leaderboard"></i></button>
     <button data-tab="lt">🎤<span>Ospiti</span><i class="onair-dot" data-dot="lowerthird"></i></button>
     <button data-tab="sb">⚔️<span>Squadre</span><i class="onair-dot" data-dot="scoreboard"></i></button>
@@ -42,6 +43,7 @@
     <button data-tab="tk">📰<span>Ticker</span><i class="onair-dot" data-dot="ticker"></i></button>
     <button data-tab="an">📣<span>Annuncio</span><i class="onair-dot" data-dot="announce"></i></button>
     <button data-tab="vt">🗳<span>Televoto</span><i class="onair-dot" data-dot="vote"></i></button>
+    <button data-tab="qz">❓<span>Quiz</span><i class="onair-dot" data-dot="quiz"></i></button>
     <button data-tab="wh">🎡<span>Ruota</span><i class="onair-dot" data-dot="wheel"></i></button>
     <button data-tab="st">💬<span>Sottotitoli</span><i class="onair-dot" data-dot="subtitles"></i></button>
     <button data-tab="ck">🕒<span>Orologio</span><i class="onair-dot" data-dot="clock"></i></button>
@@ -140,6 +142,10 @@
         </div>
         <button class="btn">Imposta (azzera il timer)</button>
       </form>
+      <div class="card admin-only">
+        <label>Scritta quando il tempo si ferma (pausa o fine; vuota = nessuna)<input data-cfg="timer.stopText:value" maxlength="30" placeholder="STOP AL TEMPO"></label>
+        <div class="sub" style="color:var(--dim);font-size:13px">Compare sotto il timer quando premi Pausa o quando il conto alla rovescia arriva a zero, e sparisce quando riparte o con Reset. Cambiarla non azzera il timer.</div>
+      </div>
     </div>
 
     <!-- TICKER -->
@@ -209,6 +215,162 @@
         </div>
         <div class="sub" style="color:var(--dim);font-size:13px">I telefoni del pubblico devono essere sulla stessa rete del Mac. Vedi il README, sezione Televoto.</div>
         <div id="vtQrPanel" class="qr-panel"></div>
+      </details>
+    </div>
+
+    <!-- REGIA OBS -->
+    <div class="tab" data-panel="obs" hidden>
+      <div class="onair-row"><h2>Regia OBS</h2><span class="obs-pill" id="obsPill">…</span></div>
+
+      <div class="card" id="obsOff" hidden>
+        <div id="obsErr" style="font-weight:700"></div>
+        <ol class="sub" style="color:var(--dim);font-size:14px;margin:10px 0 0;padding-left:20px;line-height:1.5">
+          <li>Apri OBS sul Mac.</li>
+          <li>Menu <b>Strumenti → Impostazioni server WebSocket</b>.</li>
+          <li>Spunta <b>Abilita server WebSocket</b> (porta 4455).</li>
+          <li>Premi <b>Mostra informazioni di connessione</b>, copia la <b>password</b> e incollala qui sotto in "Collegamento a OBS".</li>
+        </ol>
+      </div>
+
+      <div id="obsMain" hidden>
+        <div class="card obs-studio">
+          <div class="obs-mon" id="obsMon"></div>
+          <div id="obsStudioCtl"></div>
+        </div>
+
+        <h3 class="obs-h">Scene</h3>
+        <div class="obs-grid" id="obsScenes"></div>
+
+        <div class="obs-h-row"><h3 class="obs-h">Tasti macro</h3>
+          <button class="btn sm admin-only" type="button" id="macroEditToggle">✎ Modifica</button></div>
+        <div class="obs-grid macros" id="obsMacros"></div>
+
+        <form class="card admin-only" id="macroForm" hidden>
+          <h3 style="margin-top:0" id="macroFormTitle">➕ Nuovo tasto</h3>
+          <input type="hidden" name="id">
+          <div class="grid2">
+            <label>Nome<input name="name" maxlength="24" required placeholder="es. Via al quiz"></label>
+            <label>Icona (emoji)<input name="icon" maxlength="4" placeholder="❓"></label>
+            <label>Colore<input name="color" type="color" value="#3B6BFF"></label>
+          </div>
+          <div class="sub" style="color:var(--dim);font-size:13px;margin:8px 0 4px">Passi, eseguiti in ordine:</div>
+          <div id="macroSteps" class="list"></div>
+          <div class="row-btns" style="margin-top:8px">
+            <select id="macroAdd" style="flex:1">
+              <option value="">＋ Aggiungi un passo…</option>
+              <option value="scene">🎬 Scena di OBS</option>
+              <option value="transition">⏩ Transizione (modalità studio)</option>
+              <option value="mute">🔇 Audio: muto / attiva</option>
+              <option value="gfx">✨ Grafica LiveGFX</option>
+              <option value="announce">📣 Annuncio con testo</option>
+              <option value="wait">⏳ Attendi</option>
+            </select>
+          </div>
+          <div class="row-btns" style="margin-top:12px">
+            <button class="btn primary">Salva tasto</button>
+            <button class="btn" type="button" id="macroCancel">Annulla</button>
+            <button class="btn danger" type="button" id="macroDelete" hidden>Elimina</button>
+          </div>
+        </form>
+
+        <h3 class="obs-h">Audio</h3>
+        <div class="card" id="obsAudio"></div>
+      </div>
+
+      <details class="card admin-only" id="obsCfg">
+        <summary>Collegamento a OBS</summary>
+        <form id="obsCfgForm">
+          <div class="grid2">
+            <label>Indirizzo<input name="host" placeholder="127.0.0.1"></label>
+            <label>Porta<input name="port" type="number" inputmode="numeric" placeholder="4455"></label>
+          </div>
+          <label>Password del server WebSocket<input name="password" type="password" autocomplete="off" placeholder="lascia vuoto per non cambiarla"></label>
+          <div class="row-btns" style="margin-top:10px">
+            <button class="btn primary">Salva e collega</button>
+            <button class="btn" type="button" id="obsDisconnect">Scollega</button>
+            <button class="btn" type="button" data-a="obs.refresh">↻ Aggiorna da OBS</button>
+          </div>
+          <p class="sub" style="color:var(--dim);font-size:13px">LiveGFX e OBS sono sullo stesso Mac: lascia 127.0.0.1. La password resta sul Mac (data/obs.json) e non viene mai inviata alle grafiche. I comandi funzionano solo dalla rete locale.</p>
+        </form>
+      </details>
+    </div>
+
+    <!-- QUIZ TELEVISIVO -->
+    <div class="tab" data-panel="qz" hidden>
+      <div class="onair-row"><h2>Quiz</h2><button class="btn onair" data-toggle="quiz" data-on="quiz.show" data-off="quiz.hide"></button></div>
+      <div class="card" id="qzLive"></div>
+      <div class="card">
+        <label style="margin-top:0">Chi risponde (i punti vanno in classifica)<select id="qzWho"></select></label>
+        <div class="qz-answers" id="qzAnswers" style="margin-top:10px"></div>
+        <div class="row-btns" style="margin-top:10px">
+          <button class="btn primary big" data-a="quiz.reveal" id="qzReveal">✅ Rivela la risposta</button>
+          <button class="btn big" data-a="quiz.unselect" id="qzUnselect">Spegni</button>
+        </div>
+        <div class="row-btns" style="margin-top:8px">
+          <button class="btn" data-a="quiz.fifty" id="qzFifty">✂️ 50:50</button>
+          <button class="btn" id="qzTimerBtn" type="button">⏱ Avvia tempo</button>
+          <span class="qz-time" id="qzTime"></span>
+        </div>
+        <div class="row-btns" style="margin-top:8px">
+          <button class="btn" data-a="quiz.prev">◀ Precedente</button>
+          <button class="btn primary" data-a="quiz.next">Prossima ▶</button>
+          <button class="btn qz-final" data-a="quiz.final" id="qzFinal">🏆 Ultima domanda</button>
+        </div>
+        <div class="sub" style="color:var(--dim);font-size:13px;margin-top:8px">Tocca la risposta del concorrente per "accenderla" (arancione), poi "Rivela": verde se è giusta, rossa se è sbagliata (e la giusta lampeggia in verde). Se nessuno risponde, "Rivela" mostra solo la giusta. La ✓ qui sotto la vedi solo tu nel pannello.</div>
+      </div>
+      <div class="card admin-only">
+        <h3 style="margin-top:0">📋 Domande del set <span id="qzCount" style="color:var(--dim);font-weight:400"></span></h3>
+        <div id="qzList" class="list"></div>
+        <div class="row-btns" style="margin-top:10px">
+          <button class="btn sm" data-a="quiz.shuffle" data-confirm="Mescolare l'ordine delle risposte in tutte le domande? (la risposta giusta resta giusta)">🔀 Mescola le risposte</button>
+          <button class="btn sm" type="button" id="qzExport">📤 Esporta set</button>
+          <label class="btn sm" style="cursor:pointer">📥 Importa set<input type="file" id="qzImportFile" accept=".json,application/json" hidden></label>
+          <button class="btn sm danger" data-a="quiz.clear" data-confirm="Cancellare tutte le domande?">Svuota</button>
+        </div>
+      </div>
+      <form class="card admin-only" id="qzForm">
+        <h3 style="margin-top:0" id="qzFormTitle">➕ Scrivi una domanda</h3>
+        <input type="hidden" name="id">
+        <label>Domanda<textarea name="q" rows="2" maxlength="160" required></textarea></label>
+        <div class="qz-edit">
+          <label><input type="radio" name="correct" value="0" required> A<input name="a0" maxlength="70" required></label>
+          <label><input type="radio" name="correct" value="1"> B<input name="a1" maxlength="70" required></label>
+          <label><input type="radio" name="correct" value="2"> C<input name="a2" maxlength="70" required></label>
+          <label><input type="radio" name="correct" value="3"> D<input name="a3" maxlength="70" required></label>
+        </div>
+        <div class="sub" style="color:var(--dim);font-size:13px">Seleziona il pallino accanto alla risposta giusta.</div>
+        <label>Nota per te (facoltativa, non va in onda)<input name="note" maxlength="200" placeholder="es. spiegazione da leggere dopo"></label>
+        <div class="row-btns"><button class="btn primary" id="qzSave">Aggiungi</button><button class="btn" type="button" id="qzCancel" hidden>Annulla modifica</button></div>
+      </form>
+      <details class="card admin-only" id="qzAi">
+        <summary>🤖 Genera un set con l'IA</summary>
+        <p class="sub" style="color:var(--dim);font-size:13px">Compila, premi "Copia il prompt", incollalo in Claude, ChatGPT o Gemini, poi incolla qui sotto la risposta. <b>Controlla sempre le risposte giuste</b> prima dell'evento: le IA a volte sbagliano.</p>
+        <div class="grid2">
+          <label>Argomento<input id="qzTopic" placeholder="es. storia del cinema italiano"></label>
+          <label>Quante domande<input id="qzN" type="number" min="3" max="50" value="10" inputmode="numeric"></label>
+          <label>Difficoltà<select id="qzDiff"><option value="crescente (dalla più facile alla più difficile)">Crescente</option><option value="facile">Facile</option><option value="media">Media</option><option value="difficile">Difficile</option></select></label>
+          <label>Pubblico<input id="qzAudience" value="studenti delle superiori"></label>
+        </div>
+        <div class="row-btns"><button class="btn primary" type="button" id="qzCopy">📋 Copia il prompt</button></div>
+        <textarea id="qzPrompt" rows="5" readonly hidden style="margin-top:8px"></textarea>
+        <label style="margin-top:12px">Risposta dell'IA (incolla qui)<textarea id="qzPaste" rows="6" placeholder='{"titolo": "...", "domande": [ ... ]}'></textarea></label>
+        <div class="row-btns">
+          <button class="btn primary" type="button" id="qzLoadReplace">Sostituisci il set</button>
+          <button class="btn" type="button" id="qzLoadAppend">Aggiungi in fondo</button>
+        </div>
+      </details>
+      <details class="card admin-only">
+        <summary>Opzioni quiz</summary>
+        <div class="grid2">
+          <label>Titolo in onda<input data-cfg="quiz.config:title" maxlength="40"></label>
+          <label>Numero della domanda<select data-cfg="quiz.config:showNumber"><option value="true">Visibile ("Domanda 3 di 10")</option><option value="false">Nascosto</option></select></label>
+          <label>Punti per risposta giusta<input type="number" min="0" max="1000" inputmode="numeric" data-cfg="quiz.config:points"></label>
+          <label>Timer per domanda<select data-cfg="quiz.config:timerOn"><option value="false">Spento</option><option value="true">Acceso (parte da solo)</option></select></label>
+          <label>Secondi per domanda<input type="number" min="5" max="120" inputmode="numeric" data-cfg="quiz.config:timerSec"></label>
+          <label>Suoni<select data-cfg="quiz.config:muted"><option value="false">Attivi</option><option value="true">Muti</option></select></label>
+          <label>Volume suoni <output></output><input type="range" min="0" max="100" data-cfg="quiz.config:volume"></label>
+        </div>
+        <p class="sub" style="color:var(--dim);font-size:13px">I suoni cambiano col tema grafico. In OBS, nelle proprietà della fonte, attiva <b>"Controlla l'audio tramite OBS"</b> per sentirli e regolarli nel mixer. L'ultima domanda vale il doppio dei punti.</p>
       </details>
     </div>
 
@@ -353,7 +515,33 @@
           <label>Bagliore <output data-out="glow"></output><input type="range" min="0" max="1" step="0.05" data-cfg="theme.custom:glow"></label>
           <label>Font dei titoli<select data-cfg="theme.custom:font">
             <option value="inter">Inter (moderno)</option><option value="chakra">Chakra Petch (tecnico)</option>
-            <option value="playfair">Playfair Display (elegante)</option><option value="pixel">Press Start 2P (pixel)</option><option value="vt323">VT323 (terminale)</option></select></label>
+            <option value="playfair">Playfair Display (elegante)</option><option value="pixel">Press Start 2P (pixel)</option><option value="vt323">VT323 (terminale)</option>
+            <option value="alfa-slab-one">Alfa Slab One (tipografia in legno)</option>
+            <option value="audiowide">Audiowide (spazio)</option>
+            <option value="bangers">Bangers (fumetto)</option>
+            <option value="barlow-condensed">Barlow Condensed (notiziario)</option>
+            <option value="bebas-neue">Bebas Neue (alto e stretto)</option>
+            <option value="black-ops-one">Black Ops One (stencil militare)</option>
+            <option value="bodoni-moda">Bodoni Moda (gala)</option>
+            <option value="bowlby-one">Bowlby One (grassissimo)</option>
+            <option value="cinzel">Cinzel (epico)</option>
+            <option value="cormorant-garamond">Cormorant Garamond (classico)</option>
+            <option value="dm-serif-display">DM Serif Display (salotto)</option>
+            <option value="exo-2">Exo 2 (quiz)</option>
+            <option value="fredoka">Fredoka (rotondo)</option>
+            <option value="grenze-gotisch">Grenze Gotisch (gotico)</option>
+            <option value="lexend">Lexend (leggibilissimo)</option>
+            <option value="limelight">Limelight (art déco)</option>
+            <option value="michroma">Michroma (techno)</option>
+            <option value="monoton">Monoton (insegna al neon)</option>
+            <option value="orbitron">Orbitron (futuristico)</option>
+            <option value="oswald">Oswald (condensato)</option>
+            <option value="permanent-marker">Permanent Marker (pennarello)</option>
+            <option value="quicksand">Quicksand (leggero)</option>
+            <option value="righteous">Righteous (pop)</option>
+            <option value="space-grotesk">Space Grotesk (moderno)</option>
+            <option value="special-elite">Special Elite (macchina da scrivere)</option>
+            <option value="stardos-stencil">Stardos Stencil (timbro)</option></select></label>
           <label>Titoli<select data-cfg="theme.custom:uppercase"><option value="true">TUTTO MAIUSCOLO</option><option value="false">Come li scrivi</option></select></label>
         </div>
         <div class="row-btns">
@@ -368,8 +556,8 @@
       <div class="card admin-only" id="userThemesCard">
         <h3 style="margin-top:0">🗂 I miei temi</h3>
         <div id="userThemesList" class="list"></div>
-        <label style="margin-top:10px">📥 Importa un tema (file .json esportato da LiveGFX, oppure .css scritto a mano o da un'IA)
-          <input type="file" id="themeImport" accept=".json,.css,application/json,text/css"></label>
+        <label style="margin-top:10px">📥 Importa temi (file .json esportati da LiveGFX, oppure .css scritti a mano o da un'IA). Puoi selezionarne tanti insieme: nella finestra premi Cmd+A.
+          <input type="file" id="themeImport" multiple accept=".json,.css,application/json,text/css"></label>
         <div class="sub" style="color:var(--dim);font-size:13px">I temi importati stanno in <code>data/themes/</code>: non toccano il codice e si possono eliminare in qualsiasi momento. Se importi un tema con lo stesso nome interno di uno esistente, lo sostituisce.</div>
       </div>
       <div class="card">

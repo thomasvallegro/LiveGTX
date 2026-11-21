@@ -1,0 +1,38 @@
+/* LiveGFX tema: Aurora boreale */
+/* Notte artica con veli di luce verde e viola che si muovono.
+   Si importa dal pannello: Impostazioni → I miei temi → Importa. */
+
+[data-theme="aurora"] {
+  --yellow: #E8FF8A;
+  --green: #39FF88;
+  --cyan: #2EC4FF;
+  --magenta: #B14DFF;
+  --orange: #FFB86B;
+  --white: #FFFFFF;
+  --accent: #39FF88;
+  --accent-2: #8A5CFF;
+  --accent-3: #2EC4FF;
+  --danger: #FF3B4E;
+  --panel: rgba(3,12,24,.9);
+  --panel-2: rgba(10,26,46,.92);
+  --line: rgba(255,255,255,.10);
+  --text: #FFFFFF;
+  --text-dim: rgba(210,240,255,.68);
+  --text-on-accent: #03121F;
+  --glow: .8;
+  --accent-glow: rgba(57,255,136,.55);
+  --accent2-glow: rgba(138,92,255,.45);
+  --accent2-edge: rgba(57,255,136,.5);
+  --radius: 14px;
+  --font-display: 'Quicksand', 'Inter', sans-serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+  --display-case: uppercase;
+}
+[data-theme="aurora"] .neon-edge { box-shadow: 0 0 0 1px rgba(57,255,136,.45), 0 0 40px rgba(57,255,136,.18), 0 20px 50px rgba(0,0,0,.5); }
+[data-theme="aurora"] .head::after, [data-theme="aurora"] #tk::before, [data-theme="aurora"] .question::after, [data-theme="aurora"] #an .line { background: linear-gradient(90deg, #39FF88, #2EC4FF, #8A5CFF); box-shadow: none; }
+[data-theme="aurora"] #lt .bar { background: linear-gradient(90deg, #39FF88, #2EC4FF, #8A5CFF); box-shadow: none; }
+[data-theme="aurora"] #board .head, [data-theme="aurora"] #board .rows, [data-theme="aurora"] #lt .box, [data-theme="aurora"] #tm, [data-theme="aurora"] #tk, [data-theme="aurora"] #ck, [data-theme="aurora"] #vt .card, [data-theme="aurora"] #win .box, [data-theme="aurora"] #sb .teams { background-image: linear-gradient(170deg, rgba(57,255,136,.22), transparent 35%, rgba(138,92,255,.18) 55%, transparent 80%); }
+[data-theme="aurora"] #lt .tag, [data-theme="aurora"] #tk .label, [data-theme="aurora"] #tm .label, [data-theme="aurora"] #ck .label, [data-theme="aurora"] #board .live, [data-theme="aurora"] #sb .title, [data-theme="aurora"] #an .kicker { font-family: 'Inter', system-ui, sans-serif; }
+[data-theme="aurora"] #board .head, [data-theme="aurora"] #lt .box, [data-theme="aurora"] #vt .card, [data-theme="aurora"] #tk {
+  background-size: 100% 260%; animation: au-move 10s ease-in-out infinite alternate; }
+@keyframes au-move { from { background-position: 50% 0%; } to { background-position: 50% 100%; } }

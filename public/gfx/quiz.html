@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<title>LiveGFX · Quiz</title>
+<link rel="stylesheet" href="common.css">
+<link rel="stylesheet" href="glass.css">
+<link rel="stylesheet" href="themes.css">
+<!--
+  Quiz televisivo: domanda + 4 risposte. Dal pannello si "accende" la risposta
+  del concorrente e poi si rivela se è giusta (verde) o sbagliata (rosso).
+  Suoni: quizsound.js (seguono il tema). In OBS attiva "Controlla l'audio tramite OBS".
+  ?mute=1 nell'indirizzo = senza suoni (lo usa l'anteprima del pannello).
+-->
+<style>
+  :root { --qz-lit: #FF9A1F; --qz-ok: #23C552; --qz-ko: #E5262E; --qz-gold: #FFC83D; --qz-gold-2: #FF8A1F; }
+  #qz { position: absolute; left: 0; right: 0; bottom: 48px; display: flex; flex-direction: column; align-items: center; gap: 14px; }
+  #qz.final { --accent: var(--qz-gold); --accent-2: var(--qz-gold-2); }
+
+  .meta { width: 1680px; display: flex; justify-content: space-between; align-items: flex-end; gap: 20px; }
+  .meta .title { font-size: 30px; color: var(--accent); letter-spacing: .14em; white-space: nowrap; }
+  .meta .who { flex: 1; text-align: center; font: 700 30px var(--font-body); color: var(--text); opacity: 0; }
+  .meta .who b { color: var(--accent); }
+  .meta .who .pts { display: inline-block; margin-left: 12px; padding: 2px 12px; border-radius: 999px; background: var(--accent); color: #111; font-size: 20px; letter-spacing: .04em; }
+  .meta .num { font: 700 24px var(--font-body); color: var(--text-dim); letter-spacing: .1em; text-transform: uppercase; white-space: nowrap; }
+  .meta .num b { color: var(--text); }
+
+  /* forme "a esagono allungato" da quiz televisivo */
+  .shape { position: relative; overflow: hidden;
+    background: linear-gradient(var(--panel), var(--panel)), var(--qz-base, #0D0A1A);   /* base opaca: la cornice non traspare */
+    clip-path: polygon(42px 0, calc(100% - 42px) 0, 100% 50%, calc(100% - 42px) 100%, 42px 100%, 0 50%); }
+  .shape::before { content: ''; position: absolute; inset: 0; pointer-events: none;
+    background: linear-gradient(180deg, rgba(255,255,255,.10), transparent 50%, rgba(0,0,0,.18)); }
+  /* riflesso che attraversa la forma */
+  .shape::after { content: ''; position: absolute; inset: 0; pointer-events: none; opacity: 0;
+    background: linear-gradient(105deg, transparent 35%, rgba(255,255,255,.55) 50%, transparent 65%) no-repeat;
+    background-size: 220% 100%; background-position: 160% 0; }
+  /* cornice con "luci che corrono" (le lampadine degli studi TV) */
+  .frame { position: relative; padding: 4px;
+    background: repeating-linear-gradient(90deg, var(--accent) 0 16px, var(--accent-2) 16px 22px, var(--accent) 22px 38px, rgba(255,255,255,.9) 38px 44px);
+    background-size: 88px 100%; animation: chase 2.4s linear infinite;
+    clip-path: polygon(44px 0, calc(100% - 44px) 0, 100% 50%, calc(100% - 44px) 100%, 44px 100%, 0 50%); }
+  @keyframes chase { to { background-position: 88px 0; } }
+  .glow { filter: drop-shadow(0 0 10px color-mix(in srgb, var(--accent) 55%, transparent)); }
+
+  #qwrap { position: relative; width: 1680px; }
+  #rays { position: absolute; left: 50%; top: 50%; width: 1800px; height: 1800px; margin: -900px 0 0 -900px; pointer-events: none; opacity: 0; z-index: -1; }
+  #rays .spin { position: absolute; inset: 0; border-radius: 50%; animation: spin 28s linear infinite;
+    background: repeating-conic-gradient(from 0deg, color-mix(in srgb, var(--accent) 38%, transparent) 0 5deg, transparent 5deg 15deg);
+    -webkit-mask: radial-gradient(circle, #000 0 18%, transparent 58%); mask: radial-gradient(circle, #000 0 18%, transparent 58%); }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  #qbox .shape { min-height: 150px; display: flex; align-items: center; justify-content: center; padding: 18px 110px; }
+  #question { font: 700 46px/1.15 var(--font-display); color: var(--text); text-align: center; }
+
+  /* timer */
+  #trow { width: 1400px; display: none; align-items: center; gap: 18px; }
+  #trow.on { display: flex; }
+  #tbar { flex: 1; height: 14px; border-radius: 999px; background: rgba(0,0,0,.55); box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--accent) 45%, transparent);
+    position: relative; overflow: hidden; }
+  #tfill { position: absolute; inset: 0; transform-origin: left center; background: linear-gradient(90deg, var(--accent-2), var(--accent)); }
+  #trow.warn #tfill { background: linear-gradient(90deg, #ff5a3c, var(--qz-ko)); }
+  #tnum { min-width: 110px; text-align: right; font: 800 34px var(--font-display); color: var(--text); text-shadow: 0 2px 8px rgba(0,0,0,.6); }
+  #trow.warn #tnum { color: #ff5a4f; }
+
+  .answers { width: 1680px; display: grid; grid-template-columns: 1fr 1fr; gap: 16px 40px; position: relative; }
+  .ans { position: relative; }
+  .ans .shape { height: 92px; display: flex; align-items: center; gap: 18px; padding: 0 70px; transition: background-color .25s; }
+  .ans .letter { font: 800 36px var(--font-display); color: var(--accent); min-width: 34px; }
+  .ans .txt { font: 700 34px var(--font-body); color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  /* accesa: la risposta scelta dal concorrente, "respira" finché non si rivela */
+  .ans.lit .frame { background: var(--qz-lit); animation: none; }
+  .ans.lit .shape { background: var(--qz-lit); }
+  .ans.lit .shape::after { opacity: 1; animation: sweep 1.6s ease-in-out infinite; }
+  .ans.lit .letter, .ans.lit .txt { color: #1A0E00; }
+  .ans.lit { animation: breathe 1.1s ease-in-out infinite; }
+  @keyframes breathe { 0%,100% { filter: drop-shadow(0 0 6px rgba(255,154,31,.5)); } 50% { filter: drop-shadow(0 0 26px rgba(255,154,31,.95)); } }
+  @keyframes sweep { 0% { background-position: 160% 0; } 70%,100% { background-position: -60% 0; } }
+  /* tensione: mezzo secondo di buio prima dell'esito */
+  .answers.tension .ans:not(.lit) { opacity: .25; transition: opacity .3s; }
+  /* esito */
+  .ans.ok .frame, .ans.ok .shape { background: var(--qz-ok); animation: none; }
+  .ans.ok .letter, .ans.ok .txt { color: #04210E; }
+  .ans.ok { filter: drop-shadow(0 0 22px rgba(35,197,82,.85)); }
+  .ans.ok .shape::after { opacity: 1; animation: sweep 1.2s ease-out 1; }
+  .ans.ko .frame, .ans.ko .shape { background: var(--qz-ko); animation: none; }
+  .ans.ko .letter, .ans.ko .txt { color: #FFFFFF; }
+  .ans.ko { filter: drop-shadow(0 0 18px rgba(229,38,46,.8)); }
+  .ans.dim { opacity: .4; }
+  /* 50:50 */
+  .ans.gone { opacity: .22; }
+  .ans.gone .frame { animation: none; background: rgba(255,255,255,.25); }
+  .ans.gone .txt, .ans.gone .letter { visibility: hidden; }
+
+  /* lampo ai bordi dello schermo */
+  #flash { position: fixed; inset: 0; pointer-events: none; opacity: 0; }
+  #flash.ok { background: radial-gradient(ellipse at 50% 80%, transparent 40%, rgba(35,197,82,.55) 100%); }
+  #flash.ko { background: radial-gradient(ellipse at 50% 80%, transparent 40%, rgba(229,38,46,.6) 100%); }
+  #confetti { position: fixed; inset: 0; width: 1920px; height: 1080px; pointer-events: none; }
+
+  /* punti assegnati */
+  #award { position: absolute; left: 50%; top: -40px; transform: translateX(-50%); font: 800 64px var(--font-display); color: var(--qz-ok);
+    text-shadow: 0 0 24px rgba(35,197,82,.8), 0 4px 0 rgba(0,0,0,.4); white-space: nowrap; opacity: 0; pointer-events: none; }
+  #award small { font-size: 34px; color: var(--text); margin-left: 14px; }
+
+  /* "ULTIMA DOMANDA" a tutto schermo */
+  #final { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; visibility: hidden; pointer-events: none;
+    background: radial-gradient(ellipse at center, rgba(40,24,0,.82) 0%, rgba(0,0,0,.9) 70%); }
+  #final .fr { position: absolute; left: 50%; top: 50%; width: 2400px; height: 2400px; margin: -1200px 0 0 -1200px; }
+  #final .fr .spin { position: absolute; inset: 0; border-radius: 50%; animation: spin 20s linear infinite;
+    background: repeating-conic-gradient(from 0deg, rgba(255,200,61,.30) 0 4deg, transparent 4deg 12deg);
+    -webkit-mask: radial-gradient(circle, #000 0 12%, transparent 55%); mask: radial-gradient(circle, #000 0 12%, transparent 55%); }
+  #final .l1, #final .l2 { position: relative; font: 900 170px/1.05 var(--font-display); letter-spacing: .06em; text-transform: uppercase;
+    filter: drop-shadow(0 6px 0 rgba(0,0,0,.5)) drop-shadow(0 0 40px rgba(255,200,61,.6)); }
+  #final .ch { background: linear-gradient(180deg, #FFF6C8 0%, #FFC83D 45%, #C77A00 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  #final .l1 { font-size: 110px; letter-spacing: .3em; }
+  #final .x2 { position: relative; margin-top: 30px; font: 800 40px var(--font-body); color: #1a1000; background: var(--qz-gold); padding: 8px 30px; border-radius: 999px; letter-spacing: .12em; }
+  #final .ch { display: inline-block; }
+</style>
+</head>
+<body>
+<div id="qz" class="hidden-init">
+  <div class="meta"><div class="title display" id="title"></div><div class="who" id="who"></div><div class="num" id="num"></div></div>
+  <div id="qwrap">
+    <div id="rays"><div class="spin"></div></div>
+    <div id="qbox" class="glow"><div class="frame"><div class="shape"><div id="question"></div></div></div></div>
+  </div>
+  <div id="trow"><div id="tbar"><div id="tfill"></div></div><div id="tnum"></div></div>
+  <div class="answers" id="answers"></div>
+  <div id="award"></div>
+</div>
+<div id="flash"></div>
+<canvas id="confetti" width="1920" height="1080"></canvas>
+<div id="final"><div class="fr"><div class="spin"></div></div><div class="l1">Ultima</div><div class="l2">Domanda</div><div class="x2">PUNTI DOPPI</div></div>
+
+<script src="../vendor/gsap.min.js"></script>
+<script src="common.js"></script>
+<script src="quizsound.js"></script>
+<script>
+const $ = (s) => document.querySelector(s);
+const qz = $('#qz'), ansEl = $('#answers'), esc = LiveGFX.esc, S = window.QuizSound;
+let visible = false, busy = false, curKey = '', last = null, lastFinalAt = 0, lastTick = -1, timeUpDone = false, S0 = null;
+
+// ---------- testo ----------
+function fitQuestion() {
+  const el = $('#question'); let size = 46; el.style.fontSize = size + 'px';
+  while (el.scrollHeight > 120 && size > 28) { size -= 2; el.style.fontSize = size + 'px'; }
+}
+function fitAnswers() {
+  for (const t of ansEl.querySelectorAll('.txt')) {
+    let size = 34; t.style.fontSize = size + 'px';
+    while (t.scrollWidth > t.clientWidth + 1 && size > 20) { size -= 2; t.style.fontSize = size + 'px'; }
+  }
+}
+function build(Q) {
+  $('#question').textContent = Q.q;
+  ansEl.querySelectorAll('.ans').forEach((e) => e.remove());
+  ansEl.insertAdjacentHTML('afterbegin', Q.answers.map((a, i) => `<div class="ans" data-i="${i}"><div class="frame"><div class="shape">
+    <span class="letter">${'ABCD'[i]}:</span><span class="txt">${esc(a)}</span></div></div></div>`).join(''));
+  ansEl.classList.remove('tension');
+  document.fonts.ready.then(() => { fitQuestion(); fitAnswers(); });
+}
+const items = () => [...ansEl.querySelectorAll('.ans')];
+
+// ---------- segni sulle risposte ----------
+function marks(q, Q) {
+  items().forEach((el, i) => {
+    el.classList.toggle('gone', q.fifty.includes(i) && !(q.revealed && i === Q.correct));
+    el.classList.toggle('lit', q.selected === i && !q.revealed);
+    el.classList.toggle('ok', q.revealed && i === Q.correct);
+    el.classList.toggle('ko', q.revealed && q.selected === i && i !== Q.correct);
+    el.classList.toggle('dim', q.revealed && i !== Q.correct && q.selected !== i);
+  });
+}
+
+// ---------- effetti ----------
+function flash(kind) {
+  const f = $('#flash'); f.className = kind;
+  gsap.fromTo(f, { opacity: 0 }, { opacity: 1, duration: 0.12, yoyo: true, repeat: 1, ease: 'power2.out', onComplete: () => gsap.to(f, { opacity: 0, duration: 0.6 }) });
+}
+function raysBurst(strong) {
+  gsap.killTweensOf('#rays');
+  gsap.fromTo('#rays', { opacity: 0, scale: 0.6 }, { opacity: strong ? 1 : 0.55, scale: 1.1, duration: 0.5, ease: 'power3.out' });
+  gsap.to('#rays', { opacity: 0.18, scale: 1, duration: 1.6, delay: 1.4, ease: 'power2.inOut' });
+}
+// coriandoli (canvas, nessuna libreria)
+const cv = $('#confetti'), cx = cv.getContext('2d'); let parts = [], raf = 0;
+function confetti(fromY) {
+  const css = getComputedStyle(document.documentElement);
+  const cols = ['#23C552', '#FFFFFF', css.getPropertyValue('--accent').trim() || '#FFE14D', '#FFC83D', '#36D6FF'];
+  for (let i = 0; i < 160; i++) parts.push({ x: 960 + (Math.random() - 0.5) * 900, y: fromY, vx: (Math.random() - 0.5) * 16, vy: -10 - Math.random() * 16,
+    r: Math.random() * Math.PI, vr: (Math.random() - 0.5) * 0.4, w: 10 + Math.random() * 10, h: 6 + Math.random() * 8, c: cols[i % cols.length], life: 0 });
+  if (!raf) loop();
+}
+function loop() {
+  cx.clearRect(0, 0, 1920, 1080);
+  parts = parts.filter((p) => p.y < 1120 && p.life < 240);
+  for (const p of parts) {
+    p.life++; p.vy += 0.42; p.vx *= 0.99; p.x += p.vx; p.y += p.vy; p.r += p.vr;
+    cx.save(); cx.translate(p.x, p.y); cx.rotate(p.r); cx.fillStyle = p.c; cx.globalAlpha = Math.min(1, (240 - p.life) / 40);
+    cx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h * Math.abs(Math.cos(p.r * 2))); cx.restore();
+  }
+  raf = parts.length ? requestAnimationFrame(loop) : (cx.clearRect(0, 0, 1920, 1080), 0);
+}
+
+// ---------- entrate e uscite ----------
+function animIn(final) {
+  gsap.killTweensOf([qz, '#qwrap', '.meta', '.ans', '#trow']);
+  gsap.set(qz, { visibility: 'visible', opacity: 1, y: 0 });
+  S.play('in');
+  const L = items().filter((_, i) => i % 2 === 0), R = items().filter((_, i) => i % 2 === 1);
+  gsap.timeline()
+    // sipario: la domanda si apre dal centro
+    .fromTo('#qwrap', { clipPath: 'inset(0% 50% 0% 50%)', opacity: 1 }, { clipPath: 'inset(0% 0% 0% 0%)', duration: final ? 0.9 : 0.6, ease: 'power3.inOut', clearProps: 'clipPath' })
+    .fromTo('#rays', { opacity: 0 }, { opacity: 0.18, duration: 0.8 }, '<0.2')
+    .fromTo('.meta', { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.4 }, '<0.1')
+    .fromTo('#trow', { opacity: 0 }, { opacity: 1, duration: 0.3 }, '<')
+    .fromTo(L, { x: -160, opacity: 0 }, { x: 0, opacity: 1, duration: 0.5, stagger: 0.12, ease: 'power3.out' }, '-=0.15')
+    .fromTo(R, { x: 160, opacity: 0 }, { x: 0, opacity: 1, duration: 0.5, stagger: 0.12, ease: 'power3.out' }, '<0.06');
+}
+function animOut(done) {
+  gsap.killTweensOf(qz);
+  gsap.to(qz, { opacity: 0, y: 40, duration: 0.35, ease: 'power2.in', onComplete: () => { gsap.set(qz, { visibility: 'hidden', y: 0 }); if (done) done(); } });
+}
+// "ULTIMA DOMANDA": scritta a tutto schermo, poi la domanda in oro
+function finalIntro(then) {
+  busy = true;
+  const F = $('#final');
+  for (const el of F.querySelectorAll('.l1, .l2')) if (!el.dataset.split) { el.innerHTML = [...el.textContent].map((c) => `<span class="ch">${c}</span>`).join(''); el.dataset.split = 1; }
+  S.play('final');
+  gsap.timeline({ onComplete: () => { gsap.set(F, { visibility: 'hidden' }); busy = false; then(); } })
+    .set(F, { visibility: 'visible', opacity: 0 })
+    .to(F, { opacity: 1, duration: 0.4 })
+    .fromTo('#final .fr', { scale: 0.3, opacity: 0 }, { scale: 1, opacity: 1, duration: 1.2, ease: 'power2.out' }, '<')
+    .fromTo('#final .l1 .ch', { opacity: 0, y: -60 }, { opacity: 1, y: 0, duration: 0.5, stagger: 0.06, ease: 'back.out(2)' }, '<0.2')
+    .fromTo('#final .l2 .ch', { opacity: 0, scale: 2.4 }, { opacity: 1, scale: 1, duration: 0.45, stagger: 0.07, ease: 'power4.out' }, '+=0.15')
+    .fromTo('#final .x2', { opacity: 0, scale: 0.5 }, { opacity: 1, scale: 1, duration: 0.4, ease: 'back.out(3)' }, '+=0.1')
+    .to({}, { duration: 0.6 })
+    .to(F, { opacity: 0, duration: 0.45 }, '+=0.5');
+}
+
+// ---------- chi risponde e punti ----------
+function renderWho(s) {
+  const q = s.quiz, who = $('#who');
+  const e = q.contestant && s.leaderboard.entries.find((x) => x.id === q.contestant);
+  const pts = q.points * (q.final ? 2 : 1);
+  who.innerHTML = e ? `Risponde <b>${esc(e.name)}</b>${pts ? `<span class="pts">${pts} PT</span>` : ''}` : (q.final && pts ? `<span class="pts">${pts} PT</span>` : '');
+  gsap.to(who, { opacity: who.innerHTML ? 1 : 0, duration: 0.3 });
+}
+function showAward(s) {
+  const a = s.quiz.awarded; if (!a) return;
+  const e = s.leaderboard.entries.find((x) => x.id === a.id);
+  const el = $('#award'); el.innerHTML = `+${a.pts}<small>${esc(e ? e.name : '')}</small>`;
+  gsap.timeline().fromTo(el, { opacity: 0, y: 30, scale: 0.6 }, { opacity: 1, y: -70, scale: 1, duration: 0.6, ease: 'back.out(2)' })
+    .to(el, { opacity: 0, y: -120, duration: 0.6, delay: 1.4 });
+}
+
+// ---------- timer ----------
+function timerFrame() {
+  requestAnimationFrame(timerFrame);
+  if (!S0) return;
+  const q = S0.quiz, bar = $('#trow');
+  bar.classList.toggle('on', !!q.timerOn);
+  if (!q.timerOn) { $('#tnum').textContent = ''; return; }
+  const total = q.timerSec * 1000;
+  let left = q.timerLeft != null ? q.timerLeft : q.timerAt ? total - (LiveGFX.serverNow() - q.timerAt) : total;
+  left = Math.max(0, Math.min(total, left));
+  $('#tfill').style.transform = `scaleX(${left / total})`;
+  const sec = Math.ceil(left / 1000);
+  $('#tnum').textContent = visible ? (left <= 0 ? 'TEMPO!' : sec) : '';
+  bar.classList.toggle('warn', left <= 5000);
+  const running = q.timerAt && q.timerLeft == null && LiveGFX.serverNow() >= q.timerAt && visible;
+  if (running && left > 0 && sec <= 5 && sec !== lastTick) { lastTick = sec; S.play('tick', sec === 1); }
+  if (running && left <= 0 && !timeUpDone) { timeUpDone = true; S.play('timeup'); flash('ko'); gsap.fromTo('#trow', { x: -10 }, { x: 0, duration: 0.5, ease: 'elastic.out(1,0.3)' }); }
+  if (left > 0) timeUpDone = false;
+  if (sec > 5) lastTick = -1;
+}
+requestAnimationFrame(timerFrame);
+
+// ---------- reazione allo stato ----------
+function react(q, Q, prev) {
+  const it = items();
+  // 50:50
+  if (q.fifty.length && !(prev.fifty || []).length) {
+    S.play('fifty');
+    q.fifty.forEach((i, k) => gsap.fromTo(it[i], { x: 0 }, { x: k ? 30 : -30, opacity: 0.22, duration: 0.35, delay: k * 0.15, yoyo: false, ease: 'power2.in', onComplete: () => gsap.to(it[i], { x: 0, duration: 0.3 }) }));
+  }
+  // risposta accesa
+  if (q.selected !== null && q.selected !== prev.selected && !q.revealed) {
+    S.play('lit'); S.suspense(true);
+    gsap.fromTo(it[q.selected], { scale: 1.06 }, { scale: 1, duration: 0.4, ease: 'back.out(3)' });
+  }
+  if (q.selected === null && prev.selected !== null && !q.revealed) S.suspense(false);
+  // rivelazione: mezzo secondo di tensione, poi l'esito
+  if (q.revealed && !prev.revealed) {
+    S.suspense(false);
+    const good = q.selected === Q.correct, none = q.selected === null;
+    ansEl.classList.add('tension');
+    marks({ ...q, revealed: false }, Q);
+    setTimeout(() => {
+      ansEl.classList.remove('tension');
+      marks(q, Q);
+      if (good) {
+        S.play('correct'); flash('ok'); raysBurst(true); confetti(1000);
+        gsap.fromTo(it[Q.correct], { scale: 1.1 }, { scale: 1, duration: 0.6, ease: 'elastic.out(1, 0.4)' });
+        if (S0.quiz.awarded) setTimeout(() => showAward(S0), 500);
+      } else {
+        S.play(none ? 'fifty' : 'wrong');
+        if (!none) { flash('ko'); gsap.fromTo(ansEl, { x: -18 }, { x: 0, duration: 0.6, ease: 'elastic.out(1, 0.25)' }); }
+        gsap.fromTo(it[Q.correct], { opacity: 0.3 }, { opacity: 1, duration: 0.18, repeat: 6, yoyo: true, ease: 'none', delay: none ? 0 : 0.5,
+          onComplete: () => gsap.set(it[Q.correct], { opacity: 1 }) });
+      }
+    }, 650);
+    return;
+  }
+  marks(q, Q);
+}
+
+let first = true;
+LiveGFX.onState((s) => {
+  // all'apertura (o ricarica in OBS) non ripetere una scritta "ULTIMA DOMANDA" già vista
+  if (first) { first = false; if (s.quiz && s.quiz.finalAt && LiveGFX.serverNow() - s.quiz.finalAt > 6000) lastFinalAt = s.quiz.finalAt; }
+  S0 = s;
+  const q = s.quiz;
+  S.setVolume((q.volume ?? 80) / 100, q.muted);
+  if (!q || !q.questions.length) { if (visible) { visible = false; S.stopAll(); animOut(); } last = null; return; }
+  const Q = q.questions[Math.min(q.index, q.questions.length - 1)];
+  $('#title').textContent = q.title;
+  $('#num').innerHTML = q.final ? '<b>ULTIMA DOMANDA</b>' : q.showNumber ? `Domanda <b>${q.index + 1}</b> di ${q.questions.length}` : '';
+  qz.classList.toggle('final', !!q.final);
+  renderWho(s);
+  const key = Q.id + '|' + Q.q + '|' + Q.answers.join('|');
+  const changed = key !== curKey;
+  const prev = last || { selected: null, revealed: false, fifty: [] };
+  const wantIntro = q.final && q.finalAt && q.finalAt !== lastFinalAt;
+  last = { selected: q.selected, revealed: q.revealed, fifty: [...q.fifty] };
+  if (busy) return;   // durante la scritta "ULTIMA DOMANDA" lo stato si applica alla fine
+
+  const enter = () => { curKey = key; build(Q); marks(q, Q); animIn(q.final); if (q.selected !== null && !q.revealed) S.suspense(true); };
+  if (q.visible && wantIntro) {
+    lastFinalAt = q.finalAt; S.stopAll();
+    const go = () => finalIntro(() => { visible = true; const cur = S0.quiz; const QQ = cur.questions[Math.min(cur.index, cur.questions.length - 1)];
+      curKey = ''; last = { selected: cur.selected, revealed: cur.revealed, fifty: [...cur.fifty] }; build(QQ); curKey = QQ.id + '|' + QQ.q + '|' + QQ.answers.join('|'); marks(cur, QQ); animIn(true); });
+    if (visible) { visible = false; animOut(go); } else go();
+    return;
+  }
+  if (q.visible && !visible) {
+    visible = true; enter();
+  } else if (!q.visible && visible) {
+    visible = false; S.stopAll(); animOut();
+  } else if (visible && changed) {
+    S.stopAll();
+    animOut(() => enter());
+  } else if (visible) {
+    react(q, Q, prev);
+  } else if (changed) {
+    curKey = key; build(Q);
+  }
+});
+</script>
+</body>
+</html>

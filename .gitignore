@@ -1,0 +1,8 @@
+node_modules/
+data/
+config.json
+.DS_Store
+sottotitoli/.venv/
+sottotitoli/modello/
+sottotitoli/trascrizioni/
+bin/

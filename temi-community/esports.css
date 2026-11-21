@@ -1,0 +1,37 @@
+/* LiveGFX tema: Esports */
+/* Nero, viola neon e ciano, angoli tagliati: torneo di videogiochi.
+   Si importa dal pannello: Impostazioni → I miei temi → Importa. */
+
+[data-theme="esports"] {
+  --yellow: #FDE047;
+  --green: #4ADE80;
+  --cyan: #22D3EE;
+  --magenta: #F472B6;
+  --orange: #FB923C;
+  --white: #FFFFFF;
+  --accent: #A855F7;
+  --accent-2: #22D3EE;
+  --accent-3: #F472B6;
+  --danger: #FF3B4E;
+  --panel: rgba(8,6,16,.94);
+  --panel-2: rgba(30,18,60,.95);
+  --line: rgba(255,255,255,.10);
+  --text: #FFFFFF;
+  --text-dim: rgba(220,210,255,.65);
+  --text-on-accent: #FFFFFF;
+  --glow: .9;
+  --accent-glow: rgba(168,85,247,.7);
+  --accent2-glow: rgba(34,211,238,.5);
+  --accent2-edge: rgba(168,85,247,.8);
+  --radius: 0px;
+  --font-display: 'Orbitron', 'Inter', sans-serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+  --display-case: uppercase;
+}
+[data-theme="esports"] .neon-edge { box-shadow: 0 0 0 1px rgba(168,85,247,.8), 0 0 30px rgba(168,85,247,.35); }
+[data-theme="esports"] .head::after, [data-theme="esports"] #tk::before, [data-theme="esports"] .question::after, [data-theme="esports"] #an .line { background: linear-gradient(90deg, #A855F7, #22D3EE); box-shadow: none; }
+[data-theme="esports"] #lt .bar { background: linear-gradient(90deg, #A855F7, #22D3EE); box-shadow: none; }
+[data-theme="esports"] #board .head, [data-theme="esports"] #board .rows, [data-theme="esports"] #lt .box, [data-theme="esports"] #tm, [data-theme="esports"] #tk, [data-theme="esports"] #ck, [data-theme="esports"] #vt .card, [data-theme="esports"] #win .box, [data-theme="esports"] #sb .teams { background-image: linear-gradient(135deg, #A855F7 0 16px, transparent 16px), linear-gradient(315deg, #22D3EE 0 16px, transparent 16px); }
+[data-theme="esports"] #lt .tag, [data-theme="esports"] #tk .label, [data-theme="esports"] #tm .label, [data-theme="esports"] #ck .label, [data-theme="esports"] #board .live, [data-theme="esports"] #sb .title, [data-theme="esports"] #an .kicker { font-family: 'Inter', system-ui, sans-serif; }
+[data-theme="esports"] .display { letter-spacing: .04em; }
+[data-theme="esports"] .tag, [data-theme="esports"] .label { clip-path: polygon(10px 0, 100% 0, calc(100% - 10px) 100%, 0 100%); }

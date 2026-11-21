@@ -1,0 +1,43 @@
+/* LiveGFX tema: Premiazione */
+/* Nero e oro, luccichio, tappeto rosso: serata di gala.
+   Si importa dal pannello: Impostazioni → I miei temi → Importa. */
+
+[data-theme="gala"] {
+  --yellow: #D4AF37;
+  --green: #9DBE8C;
+  --cyan: #F5E6B8;
+  --magenta: #B22222;
+  --orange: #C9853B;
+  --white: #FFFFFF;
+  --accent: #D4AF37;
+  --accent-2: #F5E6B8;
+  --accent-3: #B22222;
+  --danger: #FF3B4E;
+  --panel: rgba(8,6,4,.95);
+  --panel-2: rgba(28,22,12,.96);
+  --line: rgba(212,175,55,.18);
+  --text: #FFF9E8;
+  --text-dim: rgba(245,230,184,.7);
+  --text-on-accent: #140F05;
+  --glow: .5;
+  --accent-glow: rgba(212,175,55,.5);
+  --accent2-glow: transparent;
+  --accent2-edge: rgba(212,175,55,.7);
+  --radius: 0px;
+  --font-display: 'Bodoni Moda', 'Inter', sans-serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+  --display-case: none;
+}
+[data-theme="gala"] .neon-edge { box-shadow: 0 0 0 1px #D4AF37, 0 0 0 5px rgba(8,6,4,.95), 0 0 0 6px rgba(212,175,55,.5), 0 24px 60px rgba(0,0,0,.6); }
+[data-theme="gala"] .head::after, [data-theme="gala"] #tk::before, [data-theme="gala"] .question::after, [data-theme="gala"] #an .line { background: linear-gradient(90deg, #8C6D1F, #D4AF37 30%, #FFF2B8 50%, #D4AF37 70%, #8C6D1F); box-shadow: none; }
+[data-theme="gala"] #lt .bar { background: linear-gradient(90deg, #8C6D1F, #D4AF37 30%, #FFF2B8 50%, #D4AF37 70%, #8C6D1F); box-shadow: none; }
+[data-theme="gala"] #lt .tag, [data-theme="gala"] #tk .label, [data-theme="gala"] #tm .label, [data-theme="gala"] #ck .label, [data-theme="gala"] #board .live, [data-theme="gala"] #sb .title, [data-theme="gala"] #an .kicker { font-family: 'Inter', system-ui, sans-serif; }
+[data-theme="gala"] #lt .tag, [data-theme="gala"] #tk .label, [data-theme="gala"] #tm .label, [data-theme="gala"] #ck .label, [data-theme="gala"] #board .live, [data-theme="gala"] #sb .title, [data-theme="gala"] #an .kicker { background: linear-gradient(90deg, #8C6D1F, #D4AF37, #FFF2B8, #D4AF37, #8C6D1F); background-size: 300% 100%; color: #140F05; animation: gl-shine 5s linear infinite; font-family: 'Inter', sans-serif; font-weight: 600; letter-spacing: .26em; }
+@keyframes gl-shine { from { background-position: 0% 50%; } to { background-position: 300% 50%; } }
+[data-theme="gala"] .head::after, [data-theme="gala"] #tk::before, [data-theme="gala"] .question::after, [data-theme="gala"] #an .line {
+  background-size: 300% 100%; animation: gl-shine 4s linear infinite; }
+[data-theme="gala"] .display { font-weight: 900; }
+[data-theme="gala"] .name, [data-theme="gala"] .tname, [data-theme="gala"] .opt .text { font-family: var(--font-display); text-transform: none; }
+[data-theme="gala"] .row[data-rank="1"] .rank { color: #D4AF37; }
+[data-theme="gala"] .row[data-rank="2"] .rank { color: #C0C0C0; }
+[data-theme="gala"] .row[data-rank="3"] .rank { color: #CD7F32; }

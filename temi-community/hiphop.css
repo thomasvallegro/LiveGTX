@@ -1,0 +1,38 @@
+/* LiveGFX tema: Hip hop */
+/* Nero, oro e arancio, scritte corsive e spruzzi da graffito.
+   Si importa dal pannello: Impostazioni → I miei temi → Importa. */
+
+[data-theme="hiphop"] {
+  --yellow: #FFC300;
+  --green: #3CFF6E;
+  --cyan: #00D1FF;
+  --magenta: #FF3EA5;
+  --orange: #FF4D00;
+  --white: #FFFFFF;
+  --accent: #FFC300;
+  --accent-2: #FF4D00;
+  --accent-3: #FFFFFF;
+  --danger: #FF3B4E;
+  --panel: rgba(10,10,10,.95);
+  --panel-2: rgba(30,30,30,.96);
+  --line: rgba(255,255,255,.10);
+  --text: #FFFFFF;
+  --text-dim: rgba(255,255,255,.7);
+  --text-on-accent: #0A0A0A;
+  --glow: .4;
+  --accent-glow: rgba(255,195,0,.45);
+  --accent2-glow: transparent;
+  --accent2-edge: rgba(255,255,255,.15);
+  --radius: 0px;
+  --font-display: 'Permanent Marker', 'Inter', sans-serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+  --display-case: uppercase;
+}
+[data-theme="hiphop"] .neon-edge { box-shadow: 0 0 0 3px #FFC300, 8px 8px 0 3px #FF4D00; }
+[data-theme="hiphop"] .head::after, [data-theme="hiphop"] #tk::before, [data-theme="hiphop"] .question::after, [data-theme="hiphop"] #an .line { background: linear-gradient(90deg, #FFC300, #FF4D00); box-shadow: none; }
+[data-theme="hiphop"] #lt .bar { background: linear-gradient(90deg, #FFC300, #FF4D00); box-shadow: none; }
+[data-theme="hiphop"] #board .head, [data-theme="hiphop"] #board .rows, [data-theme="hiphop"] #lt .box, [data-theme="hiphop"] #tm, [data-theme="hiphop"] #tk, [data-theme="hiphop"] #ck, [data-theme="hiphop"] #vt .card, [data-theme="hiphop"] #win .box, [data-theme="hiphop"] #sb .teams { background-image: radial-gradient(ellipse at 100% 0%, rgba(255,77,0,.22), transparent 45%), radial-gradient(ellipse at 0% 100%, rgba(255,195,0,.14), transparent 45%); }
+[data-theme="hiphop"] #lt .tag, [data-theme="hiphop"] #tk .label, [data-theme="hiphop"] #tm .label, [data-theme="hiphop"] #ck .label, [data-theme="hiphop"] #board .live, [data-theme="hiphop"] #sb .title, [data-theme="hiphop"] #an .kicker { font-family: 'Inter', system-ui, sans-serif; }
+[data-theme="hiphop"] #lt .tag, [data-theme="hiphop"] #tk .label, [data-theme="hiphop"] #tm .label, [data-theme="hiphop"] #ck .label, [data-theme="hiphop"] #board .live, [data-theme="hiphop"] #sb .title, [data-theme="hiphop"] #an .kicker { font-weight: 800; font-style: italic; }
+[data-theme="hiphop"] .display { font-weight: 400; }
+[data-theme="hiphop"] .glow-accent { text-shadow: 4px 4px 0 #FF4D00; }

@@ -1,0 +1,37 @@
+/* LiveGFX tema: Spy */
+/* Dossier riservato: nero, carta, timbri rossi e scrittura a macchina.
+   Si importa dal pannello: Impostazioni → I miei temi → Importa. */
+
+[data-theme="spy"] {
+  --yellow: #E9E4D8;
+  --green: #7A8B6F;
+  --cyan: #9DB4C0;
+  --magenta: #C1121F;
+  --orange: #B5651D;
+  --white: #FFFFFF;
+  --accent: #C1121F;
+  --accent-2: #E9E4D8;
+  --accent-3: #8D8D8D;
+  --danger: #C1121F;
+  --panel: rgba(14,14,14,.95);
+  --panel-2: rgba(30,30,30,.96);
+  --line: rgba(255,255,255,.10);
+  --text: #E9E4D8;
+  --text-dim: rgba(233,228,216,.6);
+  --text-on-accent: #E9E4D8;
+  --glow: 0;
+  --accent-glow: transparent;
+  --accent2-glow: transparent;
+  --accent2-edge: rgba(255,255,255,.15);
+  --radius: 0px;
+  --font-display: 'Stardos Stencil', 'Inter', sans-serif;
+  --font-body: 'Special Elite', 'Inter', sans-serif;
+  --display-case: uppercase;
+}
+[data-theme="spy"] .neon-edge { box-shadow: 0 0 0 1px rgba(233,228,216,.25), 0 18px 44px rgba(0,0,0,.6); }
+[data-theme="spy"] .head::after, [data-theme="spy"] #tk::before, [data-theme="spy"] .question::after, [data-theme="spy"] #an .line { background: repeating-linear-gradient(90deg, #C1121F 0 24px, transparent 24px 34px); box-shadow: none; }
+[data-theme="spy"] #lt .bar { background: repeating-linear-gradient(90deg, #C1121F 0 24px, transparent 24px 34px); box-shadow: none; }
+[data-theme="spy"] #lt .tag, [data-theme="spy"] #tk .label, [data-theme="spy"] #tm .label, [data-theme="spy"] #ck .label, [data-theme="spy"] #board .live, [data-theme="spy"] #sb .title, [data-theme="spy"] #an .kicker { background: transparent; color: #C1121F; border: 3px solid #C1121F; box-shadow: none; font-weight: 800; letter-spacing: .2em; }
+[data-theme="spy"] .display { letter-spacing: .06em; }
+[data-theme="spy"] .live .dot, [data-theme="spy"] #tk .label .dot { background: #C1121F; box-shadow: none; }
+[data-theme="spy"] #board .title, [data-theme="spy"] #an .title { color: #E9E4D8; }

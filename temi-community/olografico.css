@@ -1,0 +1,42 @@
+/* LiveGFX tema: Olografico */
+/* Riflessi iridescenti che scorrono, come una carta olografica.
+   Si importa dal pannello: Impostazioni → I miei temi → Importa. */
+
+[data-theme="olografico"] {
+  --yellow: #FFF59E;
+  --green: #9EFFC7;
+  --cyan: #9EFFFF;
+  --magenta: #FF9EF2;
+  --orange: #FFC79E;
+  --white: #FFFFFF;
+  --accent: #9EFFFF;
+  --accent-2: #FF9EF2;
+  --accent-3: #FFF59E;
+  --danger: #FF3B4E;
+  --panel: rgba(14,14,24,.88);
+  --panel-2: rgba(30,30,48,.9);
+  --line: rgba(255,255,255,.10);
+  --text: #FFFFFF;
+  --text-dim: rgba(230,235,255,.7);
+  --text-on-accent: #14141F;
+  --glow: .7;
+  --accent-glow: rgba(158,255,255,.55);
+  --accent2-glow: rgba(255,158,242,.45);
+  --accent2-edge: rgba(255,255,255,.5);
+  --radius: 16px;
+  --font-display: 'Space Grotesk', 'Inter', sans-serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+  --display-case: uppercase;
+}
+[data-theme="olografico"] .neon-edge { box-shadow: 0 0 0 2px rgba(255,255,255,.55), 0 0 30px rgba(255,158,242,.35), 0 0 30px rgba(158,255,255,.25); }
+[data-theme="olografico"] .head::after, [data-theme="olografico"] #tk::before, [data-theme="olografico"] .question::after, [data-theme="olografico"] #an .line { background: linear-gradient(90deg, #FF9EF2, #9EFFFF, #FFF59E, #9EFFC7, #FF9EF2); box-shadow: none; }
+[data-theme="olografico"] #lt .bar { background: linear-gradient(90deg, #FF9EF2, #9EFFFF, #FFF59E, #9EFFC7, #FF9EF2); box-shadow: none; }
+[data-theme="olografico"] #board .head, [data-theme="olografico"] #board .rows, [data-theme="olografico"] #lt .box, [data-theme="olografico"] #tm, [data-theme="olografico"] #tk, [data-theme="olografico"] #ck, [data-theme="olografico"] #vt .card, [data-theme="olografico"] #win .box, [data-theme="olografico"] #sb .teams { background-image: linear-gradient(120deg, rgba(255,0,200,.14), rgba(0,255,255,.14), rgba(255,255,0,.12), rgba(0,255,150,.12), rgba(255,0,200,.14)); }
+[data-theme="olografico"] #lt .tag, [data-theme="olografico"] #tk .label, [data-theme="olografico"] #tm .label, [data-theme="olografico"] #ck .label, [data-theme="olografico"] #board .live, [data-theme="olografico"] #sb .title, [data-theme="olografico"] #an .kicker { font-family: 'Inter', system-ui, sans-serif; }
+[data-theme="olografico"] #lt .tag, [data-theme="olografico"] #tk .label, [data-theme="olografico"] #tm .label, [data-theme="olografico"] #ck .label, [data-theme="olografico"] #board .live, [data-theme="olografico"] #sb .title, [data-theme="olografico"] #an .kicker { background: linear-gradient(90deg, #FF9EF2, #9EFFFF, #FFF59E, #FF9EF2); background-size: 300% 100%; color: #14141F; animation: ol-move 6s linear infinite; }
+[data-theme="olografico"] #board .head, [data-theme="olografico"] #board .rows, [data-theme="olografico"] #lt .box, [data-theme="olografico"] #tm,
+[data-theme="olografico"] #tk, [data-theme="olografico"] #ck, [data-theme="olografico"] #vt .card, [data-theme="olografico"] #win .box {
+  background-size: 300% 300%; animation: ol-move 9s linear infinite; }
+[data-theme="olografico"] .head::after, [data-theme="olografico"] #tk::before, [data-theme="olografico"] .question::after, [data-theme="olografico"] #an .line {
+  background-size: 300% 100%; animation: ol-move 5s linear infinite; }
+@keyframes ol-move { from { background-position: 0% 50%; } to { background-position: 300% 50%; } }

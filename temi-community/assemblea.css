@@ -1,0 +1,43 @@
+/* LiveGFX tema: Assemblea d'istituto */
+/* Sobrio, chiaro e autorevole: massima leggibilità per eventi scolastici.
+   Si importa dal pannello: Impostazioni → I miei temi → Importa. */
+
+[data-theme="assemblea"] {
+  --yellow: #F59E0B;
+  --green: #16A34A;
+  --cyan: #1D4ED8;
+  --magenta: #BE185D;
+  --orange: #EA580C;
+  --white: #FFFFFF;
+  --accent: #1D4ED8;
+  --accent-2: #14213D;
+  --accent-3: #F59E0B;
+  --danger: #DC2626;
+  --panel: rgba(255,255,255,.97);
+  --panel-2: #EEF2F8;
+  --line: rgba(20,33,61,.1);
+  --text: #14213D;
+  --text-dim: rgba(20,33,61,.62);
+  --text-on-accent: #FFFFFF;
+  --glow: 0;
+  --accent-glow: transparent;
+  --accent2-glow: transparent;
+  --accent2-edge: rgba(255,255,255,.15);
+  --radius: 8px;
+  --font-display: 'Lexend', 'Inter', sans-serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+  --display-case: uppercase;
+}
+[data-theme="assemblea"] .neon-edge { box-shadow: inset 6px 0 0 #1D4ED8, 0 0 0 1px rgba(20,33,61,.08), 0 12px 32px rgba(0,0,0,.25); }
+[data-theme="assemblea"] .head::after, [data-theme="assemblea"] #tk::before, [data-theme="assemblea"] .question::after, [data-theme="assemblea"] #an .line { background: #1D4ED8; box-shadow: none; }
+[data-theme="assemblea"] #lt .bar { background: #1D4ED8; box-shadow: none; }
+[data-theme="assemblea"] #lt .tag, [data-theme="assemblea"] #tk .label, [data-theme="assemblea"] #tm .label, [data-theme="assemblea"] #ck .label, [data-theme="assemblea"] #board .live, [data-theme="assemblea"] #sb .title, [data-theme="assemblea"] #an .kicker { font-family: 'Inter', system-ui, sans-serif; }
+[data-theme="assemblea"] #an .backdrop { background: radial-gradient(ellipse at center, var(--panel) 0, var(--panel-2) 60%, rgba(0,0,0,.25) 100%); }
+[data-theme="assemblea"] .opt .text, [data-theme="assemblea"] .opt .val { text-shadow: none; }
+[data-theme="assemblea"] [class*="c-"] { --c-glow: transparent; }
+[data-theme="assemblea"] .display { font-weight: 800; }
+[data-theme="assemblea"] .glow-accent { text-shadow: none; }
+[data-theme="assemblea"] #board .title, [data-theme="assemblea"] #an .title, [data-theme="assemblea"] #vt .question { color: #14213D; }
+[data-theme="assemblea"] .row[data-rank="1"] .rank { color: #1D4ED8; text-shadow: none; }
+[data-theme="assemblea"] .row[data-rank="2"] .rank { color: #14213D; }
+[data-theme="assemblea"] .row[data-rank="3"] .rank { color: #F59E0B; }

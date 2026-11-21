@@ -37,7 +37,13 @@ const PORT = Number(process.env.PORT) || config.port;
 fs.mkdirSync(DATA, { recursive: true });
 let state;
 try {
-  state = Object.assign(createInitialState(), JSON.parse(fs.readFileSync(STATE_FILE, 'utf8')));
+  const init = createInitialState(), saved = JSON.parse(fs.readFileSync(STATE_FILE, 'utf8'));
+  // unione a un livello: i campi aggiunti nelle versioni nuove prendono il valore predefinito
+  for (const k of Object.keys(saved)) {
+    const d = init[k], v = saved[k];
+    init[k] = d && v && typeof d === 'object' && typeof v === 'object' && !Array.isArray(d) && !Array.isArray(v) ? { ...d, ...v } : v;
+  }
+  state = init;
 } catch { state = createInitialState(); }
 // all'avvio l'elenco dei temi importati si rilegge dai file (data/themes/)
 state = applyAction(state, { type: 'themes.sync', list: themes.list() }, Date.now());
@@ -50,6 +56,45 @@ function scheduleSave() {
     fs.writeFileSync(tmp, JSON.stringify(state, null, 2));
     fs.renameSync(tmp, STATE_FILE); // scrittura atomica: niente file corrotti se si chiude di colpo
   }, 300);
+}
+
+// ---------- OBS (regia a distanza) ----------
+const { createObs } = require('./lib/obs');
+const obs = createObs(DATA, () => broadcastObs());
+let runningMacro = null;
+function obsMessage() { return JSON.stringify({ t: 'obs', ...obs.status(), runningMacro }); }
+function broadcastObs() {
+  const msg = obsMessage();
+  for (const c of wss.clients) if (c.readyState === 1 && c.role) c.send(msg);
+}
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+async function runMacro(id) {
+  const m = state.macros.find((x) => x.id === id);
+  if (!m) throw new Error('Tasto non trovato');
+  if (runningMacro) throw new Error('Un\'altra macro è in corso');
+  runningMacro = id; broadcastObs();
+  try {
+    for (const st of m.steps) {
+      if (st.k === 'wait') { await sleep(st.s * 1000); continue; }
+      if (st.k === 'gfx') { const r = dispatch(st.action, 'admin'); if (r && r.ok === false) throw new Error(`"${st.label || st.action.type}": ${r.error}`); continue; }
+      if (st.k === 'scene') await obs.exec({ type: st.to === 'preview' ? 'obs.preview' : 'obs.program', scene: st.scene });
+      else if (st.k === 'transition') await obs.exec({ type: 'obs.transition' });
+      else if (st.k === 'mute') await obs.exec({ type: 'obs.mute', input: st.input, on: st.mode === 'toggle' ? undefined : st.mode === 'on' });
+    }
+  } finally { runningMacro = null; broadcastObs(); }
+}
+// I comandi OBS sono asincroni: restituiscono una Promise con { ok, error }
+async function dispatchObs(action, role) {
+  try {
+    if (action.type === 'obs.config') {
+      if (role !== 'admin') return { ok: false, error: 'Permesso negato' };
+      obs.configure(action); return { ok: true };
+    }
+    if (!canDo(role, action.type)) return { ok: false, error: 'Permesso negato per ' + action.type };
+    if (action.type === 'obs.macro') await runMacro(String(action.id || ''));
+    else await obs.exec(action);
+    return { ok: true };
+  } catch (e) { return { ok: false, error: e.message }; }
 }
 
 // ---------- Autenticazione ----------
@@ -71,6 +116,7 @@ function dispatch(action, role) {
   if (action.type === 'vote.cast') return { ok: false, error: 'Il voto passa solo dalla pagina di voto' };
   if (action.type === 'cover.logo') return { ok: false, error: 'Il logo si carica dal pannello' };
   if (action.type === 'themes.sync') return { ok: false, error: 'Azione interna' };
+  if (action.type.startsWith('obs.')) return dispatchObs(action, role);
   if (action.type === 'theme.userDelete') {
     if (!canDo(role, action.type)) return { ok: false, error: 'Permesso negato' };
     themes.remove(String(action.id || ''));
@@ -184,8 +230,8 @@ const server = http.createServer(async (req, res) => {
     const role = roleForPin(action.pin || req.headers['x-pin']);
     delete action.pin;
     if (!role) return sendJson(res, 401, { ok: false, error: 'PIN errato' });
-    const r = dispatch(action, role);
-    return sendJson(res, r.ok ? 200 : 400, r);
+    Promise.resolve(dispatch(action, role)).then((r) => sendJson(res, r.ok ? 200 : 400, r));
+    return;
   }
 
   // Indirizzi utili per il pannello
@@ -397,15 +443,38 @@ wss.on('connection', (ws) => {
     if (msg.t === 'login') {
       ws.role = roleForPin(msg.pin);
       ws.send(JSON.stringify({ t: 'login', ok: !!ws.role, role: ws.role }));
+      if (ws.role) ws.send(obsMessage());
       return;
     }
+    if (msg.t === 'thumbs') { ws.wantThumbs = !!msg.on && !!ws.role; return; }
     if (msg.t === 'ping') { ws.send(JSON.stringify({ t: 'pong', id: msg.id, serverNow: Date.now() })); return; }
     if (msg.t === 'action') {
-      const r = ws.role ? dispatch(msg.action, ws.role) : { ok: false, error: 'Non autenticato' };
-      ws.send(JSON.stringify({ t: 'ack', id: msg.id, ...r }));
+      Promise.resolve(ws.role ? dispatch(msg.action, ws.role) : { ok: false, error: 'Non autenticato' })
+        .then((r) => { if (ws.readyState === 1) ws.send(JSON.stringify({ t: 'ack', id: msg.id, ...r })); });
     }
   });
 });
+
+obs.connect();   // si ricollega da solo se OBS viene aperto dopo
+
+// Miniature delle scene OBS: solo se qualcuno ha aperto la scheda OBS del pannello.
+// In onda e anteprima ogni secondo, le altre scene a rotazione (2 al secondo).
+(async function thumbLoop() {
+  let rr = 0;
+  for (;;) {
+    await sleep(1000);
+    const viewers = [...wss.clients].filter((c) => c.readyState === 1 && c.wantThumbs);
+    if (!viewers.length || !obs.isReady()) continue;
+    const S = obs.status(), list = S.scenes;
+    if (!list.length) continue;
+    const pick = new Set([S.program, S.preview].filter(Boolean));
+    for (let k = 0; k < 2 && list.length; k++) pick.add(list[rr++ % list.length]);
+    const thumbs = {};
+    for (const name of pick) { try { thumbs[name] = await obs.screenshot(name, 240); } catch { /* scena sparita */ } }
+    const msg = JSON.stringify({ t: 'obsThumbs', thumbs });
+    for (const c of viewers) if (c.readyState === 1) c.send(msg);
+  }
+})();
 
 // Rileva connessioni morte (es. telefono che perde il Wi‑Fi)
 setInterval(() => {

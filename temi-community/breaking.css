@@ -1,0 +1,40 @@
+/* LiveGFX tema: Breaking news */
+/* Rosso e nero, strisce di pericolo che scorrono: notizia urgente.
+   Si importa dal pannello: Impostazioni → I miei temi → Importa. */
+
+[data-theme="breaking"] {
+  --yellow: #FFC400;
+  --green: #2ECC71;
+  --cyan: #FFFFFF;
+  --magenta: #E10600;
+  --orange: #FF6A00;
+  --white: #FFFFFF;
+  --accent: #E10600;
+  --accent-2: #FFFFFF;
+  --accent-3: #FFC400;
+  --danger: #FF3B4E;
+  --panel: rgba(8,8,8,.95);
+  --panel-2: rgba(28,28,28,.96);
+  --line: rgba(255,255,255,.10);
+  --text: #FFFFFF;
+  --text-dim: rgba(255,255,255,.7);
+  --text-on-accent: #FFFFFF;
+  --glow: 0;
+  --accent-glow: transparent;
+  --accent2-glow: transparent;
+  --accent2-edge: rgba(255,255,255,.15);
+  --radius: 0px;
+  --font-display: 'Oswald', 'Inter', sans-serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+  --display-case: uppercase;
+}
+[data-theme="breaking"] .neon-edge { box-shadow: 0 0 0 2px #E10600, 0 16px 40px rgba(0,0,0,.6); }
+[data-theme="breaking"] .head::after, [data-theme="breaking"] #tk::before, [data-theme="breaking"] .question::after, [data-theme="breaking"] #an .line { background: repeating-linear-gradient(-45deg, #E10600 0 14px, #111 14px 28px); box-shadow: none; }
+[data-theme="breaking"] #lt .bar { background: repeating-linear-gradient(-45deg, #E10600 0 14px, #111 14px 28px); box-shadow: none; }
+[data-theme="breaking"] #lt .tag, [data-theme="breaking"] #tk .label, [data-theme="breaking"] #tm .label, [data-theme="breaking"] #ck .label, [data-theme="breaking"] #board .live, [data-theme="breaking"] #sb .title, [data-theme="breaking"] #an .kicker { font-family: 'Inter', system-ui, sans-serif; }
+[data-theme="breaking"] #lt .tag, [data-theme="breaking"] #tk .label, [data-theme="breaking"] #tm .label, [data-theme="breaking"] #ck .label, [data-theme="breaking"] #board .live, [data-theme="breaking"] #sb .title, [data-theme="breaking"] #an .kicker { background: repeating-linear-gradient(-45deg, #E10600 0 18px, #A80000 18px 36px); background-size: 51px 51px; color: #FFFFFF; animation: bn-move 1s linear infinite; font-weight: 800; }
+@keyframes bn-move { from { background-position: 0 0; } to { background-position: 51px 0; } }
+[data-theme="breaking"] .head::after, [data-theme="breaking"] #tk::before { height: 8px; background-size: 40px 40px; animation: bn-move 1.2s linear infinite; }
+[data-theme="breaking"] .display { font-weight: 800; letter-spacing: -.005em; }
+[data-theme="breaking"] #an .backdrop { background: linear-gradient(180deg, rgba(20,0,0,.92), rgba(0,0,0,.96)); }
+[data-theme="breaking"] #an .title { color: #FFFFFF; }

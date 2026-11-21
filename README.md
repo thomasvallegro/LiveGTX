@@ -22,6 +22,7 @@ Grafiche live animate per OBS, aggiornabili in tempo reale da un pannello web, a
 | Ticker | Barra di notizie scorrevole continua. |
 | Annuncio | Titolone a tutto schermo con lettere animate (es. "LA FINALE"). |
 | Televoto | Domanda con 2–6 opzioni. Il pubblico vota dal telefono inquadrando il QR (un voto per telefono), oppure si vota per alzata di mano e conti tu dal pannello. Barre in diretta o risultati nascosti fino a "Rivela". |
+| Quiz | Stile quiz televisivo: domanda e 4 risposte. Dal pannello "accendi" la risposta del concorrente (arancione), poi riveli: verde se è giusta, rossa se è sbagliata e la giusta lampeggia. Domande scritte a mano o generate con un'IA (prompt pronto nel pannello). |
 | Ruota della fortuna | Fino a 40 spicchi (lista libera, classifica o squadre). L'estrazione la fa il server, poi la ruota gira e rallenta fino all'estratto. "Togli l'estratto" per estrazioni senza ripetizioni. |
 | Sottotitoli | Sottotitoli live stile TikTok dal microfono, offline (programma in `sottotitoli/`). Pausa, posizione, dimensione e colore dal pannello. |
 | Orologio | Ora del Mac, con etichetta, secondi e data facoltativi, in uno dei quattro angoli. |
@@ -106,6 +107,42 @@ Il pannello ha un pallino verde/rosso in alto: rosso = connessione persa (si ric
 - **Logo**: caricalo dal pannello (PNG con trasparenza ideale, max 5 MB); finisce in `data/uploads/`.
 - **Prestazioni**: gli sfondi sono disegnati dalla scheda grafica (WebGL) a 30 fotogrammi al secondo; la copertura non calcola nulla quando non è in onda. Per più fluidità: `?fps=60` nell'indirizzo. In OBS lascia attiva l'accelerazione hardware delle Browser Source (è il valore predefinito).
 
+## Regia OBS dal telefono (Stream Deck integrato)
+
+La scheda **🎛️ OBS** del pannello comanda OBS a distanza: scene con miniature dal vivo, transizione, audio e tasti macro.
+
+**Collegamento (una volta sola):** in OBS → *Strumenti → Impostazioni server WebSocket* → spunta **Abilita server WebSocket** → *Mostra informazioni di connessione* → copia la password. Nel pannello → scheda OBS → *Collegamento a OBS* → incolla la password → **Salva e collega**. Da quel momento LiveGFX si ricollega da solo ogni volta che apri OBS. La password resta in `data/obs.json` sul Mac.
+
+- **Scene**: tocchi una scena e va in **anteprima** (bordo verde), poi **TRANSIZIONE** la manda **in onda** (bordo rosso). Se la modalità studio di OBS è spenta, la scena va subito in onda (c'è un pulsante per accenderla). Transizione e durata si scelgono sotto.
+- **Audio**: muto/attivo e volume (in dB, come il mixer di OBS) di ogni fonte con audio.
+- **Tasti macro** (*✎ Modifica*, solo PIN regia): un tasto esegue più passi in fila. Passi possibili: scena in onda o in anteprima, transizione, muto/attiva/inverti un audio, una grafica LiveGFX (mostra/nascondi, quiz, timer, televoto, ruota…), un annuncio con testo, attesa di N secondi. Esempio "Via al quiz": scena *Quiz* in anteprima → transizione → mostra quiz → attendi 1 s → avvia tempo.
+- **Chi può fare cosa**: l'operatore usa scene, transizione, audio e tasti; solo la regia modifica i tasti e il collegamento.
+- **Solo rete locale**: la regia OBS funziona dal pannello sulla rete del Mac (Wi-Fi o hotspot). Dal tunnel internet passa solo la pagina di voto.
+- Le miniature si aggiornano solo mentre la scheda OBS è aperta (in onda e anteprima ogni secondo, le altre a rotazione), così OBS non lavora per niente.
+
+## Quiz
+
+1. Pannello → scheda **Quiz**. Scrivi le domande a mano (domanda, 4 risposte, pallino sulla giusta) oppure apri **Genera un set con l'IA**: argomento, quante domande, difficoltà, pubblico → **Copia il prompt** → incollalo in Claude, ChatGPT o Gemini → incolla qui la risposta → **Sostituisci il set** (o **Aggiungi in fondo**).
+2. **Controlla le risposte giuste** nell'elenco: le IA a volte sbagliano. La ✓ verde la vedi solo nel pannello, mai in onda.
+3. **IN ONDA** → il concorrente risponde → tocchi la sua risposta ("la accendiamo?") → **Rivela la risposta** → **Prossima**. Se nessuno risponde, "Rivela" mostra solo la giusta. **Rifai la domanda** azzera la domanda corrente.
+
+**Punti, aiuti e spettacolo**
+- **Chi risponde**: scegli il concorrente dal menu (sono i partecipanti della Classifica). Se la risposta è giusta, alla rivelazione i punti vanno in classifica da soli (default 10, in *Opzioni quiz*). "Rifai la domanda" li toglie.
+- **🏆 Ultima domanda**: scritta "ULTIMA DOMANDA" a tutto schermo, poi la domanda con cornice dorata. Vale **punti doppi**.
+- **✂️ 50:50**: toglie due risposte sbagliate (una volta per domanda).
+- **Timer**: in *Opzioni quiz* accendilo e scegli i secondi. Parte da solo quando entra la domanda, si ferma quando accendi una risposta, tic-tac negli ultimi 5 secondi.
+- **Suoni**: generati dal browser, cambiano col tema (classico, arcade, cinema, digitale, telegiornale, giocoso). Un tema può sceglierli con `--qz-sound: arcade;` nel suo CSS. In OBS, nella fonte, attiva **"Controlla l'audio tramite OBS"**. Volume e muto in *Opzioni quiz*. Se usi sia l'overlay unico sia `/gfx/quiz.html`, aggiungi `?mute=1` a una delle due per non sentire i suoni doppi.
+
+Altro: **Esporta set** / **Importa set** (file `.json`, utile per preparare i quiz prima), **Mescola le risposte** (la giusta resta giusta), titolo in onda e numero della domanda in *Opzioni quiz*. L'operatore (PIN operatore) può condurre il quiz ma non modificare le domande. Fonte da sola: `/gfx/quiz.html`.
+
+Formato del file (lo stesso che chiede il prompt all'IA):
+```json
+{"titolo":"Cinema italiano","domande":[
+  {"domanda":"Chi ha diretto \"La dolce vita\"?","risposte":["Antonioni","Fellini","Visconti","De Sica"],"corretta":"B","spiegazione":"Federico Fellini, 1960."}
+]}
+```
+Limiti: domanda 160 caratteri, risposte 70, massimo 200 domande. Le domande incomplete vengono scartate.
+
 ## Sottotitoli
 
 1. Avvia LiveGFX come sempre.
@@ -154,6 +191,15 @@ Comandi principali:
 | `vote.hands` / `vote.handsSet` | `id`, `delta` / `id`, `value` (alzata di mano) |
 | `vote.config` | `reveal` (`live`/`final`), `showQr`, `maxVoters`, `joinUrl` |
 | `tunnel.start` / `tunnel.stop` | voto online on/off (solo PIN regia) |
+| `quiz.show` / `quiz.hide` / `quiz.next` / `quiz.prev` / `quiz.goto` | – / `index` (da 0) per `goto` |
+| `quiz.select` / `quiz.unselect` / `quiz.reveal` | `answer` 0–3 (A–D) per `select`; `unselect` spegne o rifà la domanda |
+| `obs.preview` / `obs.program` | `scene` (nome della scena in OBS) — `preview` senza modalità studio va in onda |
+| `obs.transition` / `obs.studio` | – / `on` true/false |
+| `obs.mute` / `obs.volume` | `input` (nome fonte) + `on` (vuoto = inverti) / `input` + `mul` 0–1 |
+| `obs.macro` | `id` del tasto macro |
+| `quiz.contestant` / `quiz.fifty` / `quiz.final` / `quiz.timerStart` / `quiz.timerStop` | `id` del partecipante (vuoto = nessuno) / – |
+| `quiz.config` | `title`, `showNumber`, `points`, `timerOn`, `timerSec`, `volume` (0–100), `muted` |
+| `quiz.set` / `quiz.append` / `quiz.add` / `quiz.update` / `quiz.remove` / `quiz.move` / `quiz.shuffle` / `quiz.clear` | `questions` (array come sopra) / campi della domanda / `id` / `id`+`dir` (`up`/`down`) |
 | `wheel.add` / `wheel.remove` / `wheel.clear` / `wheel.import` | `items` (array) / `id` / – / `source` (`leaderboard`/`teams`) |
 | `wheel.spin` / `wheel.removeWinner` / `wheel.show` / `wheel.hide` | `duration` in ms (3000–15000) |
 | `subs.show` / `subs.hide` / `subs.pause` / `subs.resume` / `subs.clear` | |
@@ -213,8 +259,12 @@ Il tema:
 - Atmosfera e riferimenti: [descrivi lo stile, es. "anni '90, griglie al neon,
   tramonto rosa, cromature"]
 - Colori: [elenca i colori in #RRGGBB, oppure "scegli tu"]
-- Font: [uno tra Inter, Chakra Petch, Playfair Display, Press Start 2P, VT323:
-  sono gli unici disponibili]
+- Font dei titoli: [uno della libreria inclusa, già offline: Inter, Chakra Petch,
+  Playfair Display, Press Start 2P, VT323, Barlow Condensed, DM Serif Display,
+  Exo 2, Oswald, Bowlby One, Righteous, Special Elite, Limelight, Cinzel,
+  Black Ops One, Orbitron, Bangers, Fredoka, Alfa Slab One, Cormorant Garamond,
+  Monoton, Space Grotesk, Audiowide, Quicksand, Bebas Neue, Bodoni Moda, Lexend,
+  Permanent Marker, Michroma, Stardos Stencil, Grenze Gotisch]
 - Angoli: [squadrati / leggermente arrotondati / molto arrotondati]
 - Bagliori: [nessuno / leggeri / forti]
 
@@ -241,7 +291,11 @@ Regole da rispettare:
    Ogni regola deve iniziare con [data-theme="nome-interno"].
 2. Niente risorse da internet: niente @import, niente url() verso siti web,
    niente font esterni (verrebbero tolti all'importazione). Usa solo i font
-   elencati sopra; effetti e texture solo con gradienti CSS.
+   elencati sopra, scritti esattamente così (es. font-family: 'Cinzel');
+   effetti e texture solo con gradienti CSS.
+   Usa il font decorativo solo per i titoli (--font-display): le etichette
+   piccole (.tag .label .live .kicker) lasciale in 'Inter', altrimenti a 20 px
+   non si leggono.
 3. Le animazioni CSS NON devono usare transform: GSAP anima già quegli elementi
    e ci sarebbero conflitti. Usa solo clip-path, opacity, text-shadow, filter,
    background-position.

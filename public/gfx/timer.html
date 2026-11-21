@@ -17,6 +17,13 @@
   #tm.done .time { color: var(--danger); }
   .progress { position: absolute; left: 0; bottom: 0; height: 4px; background: var(--accent); transform-origin: 0 50%; width: 100%; }
   #tm.warn .progress { background: var(--danger); }
+  /* "STOP AL TEMPO": banda sotto il timer quando è in pausa o finito */
+  #stop { position: absolute; right: 110px; top: 140px; visibility: hidden; display: flex; align-items: center; gap: 12px;
+    padding: 10px 22px; background: var(--danger); color: #fff; border-radius: var(--radius);
+    font: 800 26px var(--font-display); letter-spacing: .14em; text-transform: uppercase; white-space: nowrap;
+    box-shadow: 0 10px 30px rgba(0,0,0,.35); }
+  #stop .ic { display: inline-flex; gap: 5px; }
+  #stop .ic i { width: 7px; height: 22px; background: #fff; border-radius: 1px; }
 </style>
 </head>
 <body>
@@ -25,13 +32,30 @@
   <div class="time num" id="time">00:00</div>
   <div class="progress" id="progress"></div>
 </div>
+<div id="stop"><span class="ic"><i></i><i></i></span><span id="stopText"></span></div>
 <script src="../vendor/gsap.min.js"></script>
 <script src="common.js"></script>
 <script>
 const tm = document.getElementById('tm');
 const timeEl = document.getElementById('time');
 const progress = document.getElementById('progress');
-let T = null, visible = false, pulse = null, lastFinished = 0;
+let T = null, visible = false, pulse = null, lastFinished = 0, stopShown = false;
+const stopEl = document.getElementById('stop');
+
+// Mostra o nasconde la scritta di stop (pausa o tempo finito)
+function setStop(on) {
+  if (on === stopShown) return;
+  stopShown = on;
+  gsap.killTweensOf(stopEl);
+  if (on) {
+    stopEl.style.top = (tm.offsetTop + tm.offsetHeight + 10) + 'px';
+    gsap.set(stopEl, { visibility: 'visible' });
+    gsap.fromTo(stopEl, { clipPath: 'inset(0% 0% 0% 100%)' }, { clipPath: 'inset(0% 0% 0% 0%)', duration: 0.45, ease: 'power3.out' });
+    gsap.fromTo(stopEl, { opacity: 0.3 }, { opacity: 1, duration: 0.15, repeat: 3, yoyo: true, delay: 0.45 });
+  } else {
+    gsap.to(stopEl, { clipPath: 'inset(0% 0% 0% 100%)', duration: 0.3, ease: 'power3.in', onComplete: () => gsap.set(stopEl, { visibility: 'hidden' }) });
+  }
+}
 
 function fmt(ms) {
   const total = Math.max(0, Math.ceil(ms / 1000));
@@ -59,12 +83,17 @@ function tick() {
     progress.style.transform = 'scaleX(0)';
     tm.classList.remove('warn', 'done');
   }
+  // fermo = in pausa dopo essere partito, oppure conto alla rovescia arrivato a zero
+  const text = T.stopText ?? 'STOP AL TEMPO';
+  const finished = T.mode === 'countdown' && elapsed >= T.duration;
+  setStop(visible && !!text && (finished || (!T.running && elapsed > 0)));
 }
 requestAnimationFrame(tick);
 
 LiveGFX.onState((s) => {
   T = s.timer;
   document.getElementById('label').textContent = T.label || 'TEMPO';
+  document.getElementById('stopText').textContent = T.stopText ?? 'STOP AL TEMPO';
   // Tempo scaduto: lampeggio
   if (T.finishedAt && T.finishedAt !== lastFinished) {
     lastFinished = T.finishedAt;

@@ -1,0 +1,113 @@
+/* LiveGFX tema: Telegiornale */
+/* Stile notiziario TV: blu notte, bande bianche, rosso "ultim'ora".
+   Si importa dal pannello: Impostazioni → I miei temi → Importa. */
+
+[data-theme="telegiornale"] {
+  --navy: #0B1F4B; --news-blue: #1556C6; --news-red: #D7141A; --paper: #FFFFFF; --paper-2: #E9EEF6;
+  --yellow: #F2B705; --green: #27AE60; --cyan: #2F80ED; --magenta: #D7141A; --orange: #F2994A; --white: #FFFFFF;
+  --accent: #D7141A; --accent-2: #1556C6; --accent-3: #F2B705;
+  --danger: #D7141A;
+  --panel: rgba(11, 31, 75, 0.96); --panel-2: rgba(21, 86, 198, 0.95);
+  --line: rgba(255, 255, 255, 0.12);
+  --text: #FFFFFF; --text-dim: rgba(220, 230, 250, 0.75); --text-on-accent: #FFFFFF;
+  --glow: 0;
+  --accent-glow: transparent; --accent2-glow: transparent; --accent2-edge: rgba(255, 255, 255, 0.12);
+  --radius: 2px;
+  --font-display: 'Barlow Condensed', 'Inter', sans-serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+  --display-case: uppercase;
+  --subs-font: 'Inter', system-ui, sans-serif; --subs-case: none;
+}
+
+/* niente bagliori: ombra netta e sobria */
+[data-theme="telegiornale"] .neon-edge { box-shadow: 0 12px 34px rgba(0, 0, 0, 0.35); }
+[data-theme="telegiornale"] .glow-accent { text-shadow: none; }
+[data-theme="telegiornale"] .display { font-weight: 700; letter-spacing: 0.01em; }
+[data-theme="telegiornale"] #board .name, [data-theme="telegiornale"] #board .score, [data-theme="telegiornale"] #board .rank { font-family: var(--font-display); font-size: 40px; }
+
+/* linee decorative: rosso pieno */
+[data-theme="telegiornale"] .head::after, [data-theme="telegiornale"] #tk::before,
+[data-theme="telegiornale"] .question::after, [data-theme="telegiornale"] #an .line {
+  background: #D7141A; box-shadow: none;
+}
+[data-theme="telegiornale"] .head::after { height: 5px; }
+
+/* ---------- OSPITI: banda bianca col nome, striscia blu col ruolo ---------- */
+[data-theme="telegiornale"] #lt .bar { width: 12px; background: #D7141A; box-shadow: none; border-radius: 0; }
+[data-theme="telegiornale"] #lt .box { background: #FFFFFF; padding-bottom: 22px; }
+[data-theme="telegiornale"] #lt .box::before { background: linear-gradient(100deg, transparent 0 40%, rgba(21, 86, 198, 0.10) 50%, transparent 60% 100%); }
+[data-theme="telegiornale"] #lt .tag { background: #D7141A; color: #FFFFFF; border-radius: 0; font-family: 'Inter', sans-serif; font-weight: 800; }
+[data-theme="telegiornale"] #lt .name { color: #0B1F4B; font-size: 74px; }
+[data-theme="telegiornale"] #lt .box > .mask:last-child { margin: 12px -36px -22px; padding: 9px 36px 11px; background: #1556C6; }
+[data-theme="telegiornale"] #lt .role { color: #FFFFFF; font-weight: 600; font-size: 28px; margin-top: 0; }
+[data-theme="telegiornale"] #lt .role b { color: #FFFFFF; }
+
+/* ---------- TICKER: "ultim'ora" rosso, banda bianca ---------- */
+[data-theme="telegiornale"] #tk { background: #FFFFFF; height: 64px; }
+[data-theme="telegiornale"] #tk::before { height: 4px; }
+[data-theme="telegiornale"] #tk .label { background: #D7141A; color: #FFFFFF; font-family: 'Inter', sans-serif; font-weight: 800; letter-spacing: 0.08em;
+  clip-path: none; padding: 0 30px; }
+[data-theme="telegiornale"] #tk .label .dot { background: #FFFFFF; box-shadow: none; animation: tg-blink 1.2s steps(1) infinite; }
+[data-theme="telegiornale"] #tk .item { color: #0B1F4B; font-weight: 600; }
+[data-theme="telegiornale"] #tk .sep { background: #D7141A; box-shadow: none; width: 10px; height: 10px; }
+@keyframes tg-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.25; } }
+
+/* ---------- CLASSIFICA: testata blu, righe bianche alternate ---------- */
+[data-theme="telegiornale"] #board .head { background: #0B1F4B; }
+[data-theme="telegiornale"] #board .title { color: #FFFFFF; font-size: 62px; }
+[data-theme="telegiornale"] #board .live { background: #D7141A; color: #FFFFFF; border-radius: 0; }
+[data-theme="telegiornale"] #board .live .dot { background: #FFFFFF; box-shadow: none; animation: tg-blink 1.2s steps(1) infinite; }
+[data-theme="telegiornale"] #board .rows { background: #FFFFFF; padding: 0; }
+[data-theme="telegiornale"] #board .row:nth-child(even) { background: #E9EEF6; }
+[data-theme="telegiornale"] #board .row + .row { border-top: 0; }
+[data-theme="telegiornale"] #board .name, [data-theme="telegiornale"] #board .score { color: #0B1F4B; }
+[data-theme="telegiornale"] #board .sub, [data-theme="telegiornale"] #board .score small { color: #5A6B8C; }
+[data-theme="telegiornale"] #board .rank { color: #FFFFFF; background: #1556C6; height: 100%; display: flex; align-items: center; justify-content: center; }
+[data-theme="telegiornale"] #board .row[data-rank="1"] .rank { color: #FFFFFF; background: #D7141A; text-shadow: none; }
+[data-theme="telegiornale"] #board .row[data-rank="2"] .rank, [data-theme="telegiornale"] #board .row[data-rank="3"] .rank { color: #FFFFFF; }
+[data-theme="telegiornale"] #board .row { padding-right: 28px; column-gap: 22px; }
+
+/* ---------- TIMER e OROLOGIO: riquadro blu, etichetta rossa ---------- */
+[data-theme="telegiornale"] #tm .label, [data-theme="telegiornale"] #ck .label {
+  background: #D7141A; color: #FFFFFF; font-family: 'Inter', sans-serif; font-weight: 800; letter-spacing: 0.12em; }
+[data-theme="telegiornale"] #tm .time, [data-theme="telegiornale"] #ck .time { font-weight: 700; font-size: 70px; }
+[data-theme="telegiornale"] #tm .progress { background: #FFFFFF; }
+[data-theme="telegiornale"] #ck .date { color: rgba(220, 230, 250, 0.85); }
+
+/* ---------- SQUADRE ---------- */
+[data-theme="telegiornale"] #sb .title { background: #D7141A; color: #FFFFFF; font-family: 'Inter', sans-serif; font-weight: 800; }
+[data-theme="telegiornale"] .tname { font-family: 'Inter', sans-serif; font-weight: 800; }
+[data-theme="telegiornale"] .tscore { font-family: 'Inter', sans-serif; font-weight: 800; color: #FFFFFF; }
+
+/* ---------- ANNUNCIO: "edizione straordinaria" ---------- */
+[data-theme="telegiornale"] #an .backdrop { background: linear-gradient(180deg, rgba(11, 31, 75, 0.94), rgba(6, 18, 46, 0.97)); }
+[data-theme="telegiornale"] #an .line { height: 6px; width: 1100px; }
+[data-theme="telegiornale"] #an .kicker { display: inline-block; background: #D7141A; color: #FFFFFF; padding: 10px 26px; letter-spacing: 0.22em;
+  font-family: 'Inter', sans-serif; font-weight: 800; }
+[data-theme="telegiornale"] #an .title { color: #FFFFFF; }
+[data-theme="telegiornale"] #an .subtitle { color: #DCE6FA; }
+
+/* ---------- TELEVOTO ---------- */
+[data-theme="telegiornale"] #vt .question { color: #FFFFFF; }
+[data-theme="telegiornale"] .opt { background: #FFFFFF; }
+[data-theme="telegiornale"] .opt .text, [data-theme="telegiornale"] .opt .val { color: #0B1F4B; text-shadow: none; }
+[data-theme="telegiornale"] .opt .cnt { color: #5A6B8C; }
+[data-theme="telegiornale"] .opt .fill { opacity: 0.3; }
+[data-theme="telegiornale"] .opt .letter { color: #FFFFFF; }
+[data-theme="telegiornale"] #vt.revealed .status { background: #D7141A; color: #FFFFFF; }
+[data-theme="telegiornale"] #qr .head { color: #FFFFFF; }
+
+/* ---------- RUOTA ---------- */
+[data-theme="telegiornale"] #wh .title { color: #FFFFFF; }
+[data-theme="telegiornale"] #win .box { box-shadow: 0 0 0 4px #D7141A, 0 20px 60px rgba(0, 0, 0, 0.5); }
+[data-theme="telegiornale"] #win .k { color: #F2B705; }
+
+/* ---------- SOTTOTITOLI: testo bianco su banda scura, come in TV ---------- */
+[data-theme="telegiornale"] #blocco { background: rgba(0, 0, 0, 0.78); padding: 0.12em 0.45em 0.18em; border-radius: 2px; font-weight: 600; }
+[data-theme="telegiornale"] .p { text-shadow: none; }
+[data-theme="telegiornale"] .p.attiva { color: #F2B705; }
+[data-theme="telegiornale"] .p.pop { animation: tg-fade 0.18s ease-out both; }
+@keyframes tg-fade { from { opacity: 0; } to { opacity: 1; } }
+
+/* ---------- COPERTURA ---------- */
+[data-theme="telegiornale"] #cv .title { text-shadow: 0 4px 24px rgba(0, 0, 0, 0.5); }

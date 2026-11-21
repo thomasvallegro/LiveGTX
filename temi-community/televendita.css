@@ -1,0 +1,45 @@
+/* LiveGFX tema: Televendita anni '90 */
+/* Giallo urlato, rosso, ombre piene: "chiamate subito!".
+   Si importa dal pannello: Impostazioni → I miei temi → Importa. */
+
+[data-theme="televendita"] {
+  --yellow: #FFE600;
+  --green: #00A651;
+  --cyan: #0047FF;
+  --magenta: #E4002B;
+  --orange: #FF7A00;
+  --white: #FFFFFF;
+  --accent: #E4002B;
+  --accent-2: #0047FF;
+  --accent-3: #00A651;
+  --danger: #FF3B4E;
+  --panel: rgba(255,230,0,.97);
+  --panel-2: #FFF27A;
+  --line: rgba(0,0,0,.15);
+  --text: #111111;
+  --text-dim: rgba(17,17,17,.7);
+  --text-on-accent: #FFFFFF;
+  --glow: 0;
+  --accent-glow: transparent;
+  --accent2-glow: transparent;
+  --accent2-edge: rgba(255,255,255,.15);
+  --radius: 6px;
+  --font-display: 'Bowlby One', 'Inter', sans-serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+  --display-case: uppercase;
+}
+[data-theme="televendita"] .neon-edge { box-shadow: 0 0 0 4px #111, 10px 10px 0 4px #E4002B; }
+[data-theme="televendita"] .head::after, [data-theme="televendita"] #tk::before, [data-theme="televendita"] .question::after, [data-theme="televendita"] #an .line { background: linear-gradient(90deg, #E4002B 0 33%, #0047FF 33% 66%, #00A651 66%); box-shadow: none; }
+[data-theme="televendita"] #lt .bar { background: linear-gradient(90deg, #E4002B 0 33%, #0047FF 33% 66%, #00A651 66%); box-shadow: none; }
+[data-theme="televendita"] #lt .tag, [data-theme="televendita"] #tk .label, [data-theme="televendita"] #tm .label, [data-theme="televendita"] #ck .label, [data-theme="televendita"] #board .live, [data-theme="televendita"] #sb .title, [data-theme="televendita"] #an .kicker { font-family: 'Inter', system-ui, sans-serif; }
+[data-theme="televendita"] #lt .tag, [data-theme="televendita"] #tk .label, [data-theme="televendita"] #tm .label, [data-theme="televendita"] #ck .label, [data-theme="televendita"] #board .live, [data-theme="televendita"] #sb .title, [data-theme="televendita"] #an .kicker { font-weight: 800; font-style: italic; letter-spacing: .06em; }
+[data-theme="televendita"] #an .backdrop { background: radial-gradient(ellipse at center, var(--panel) 0, var(--panel-2) 60%, rgba(0,0,0,.25) 100%); }
+[data-theme="televendita"] .opt .text, [data-theme="televendita"] .opt .val { text-shadow: none; }
+[data-theme="televendita"] [class*="c-"] { --c-glow: transparent; }
+[data-theme="televendita"] .display { font-weight: 400; letter-spacing: .01em; }
+[data-theme="televendita"] .glow-accent { text-shadow: 3px 3px 0 #111; }
+[data-theme="televendita"] #board .title, [data-theme="televendita"] #an .title, [data-theme="televendita"] #vt .question { color: #E4002B; }
+[data-theme="televendita"] .score, [data-theme="televendita"] .time { color: #0047FF; }
+[data-theme="televendita"] .row[data-rank="1"] .rank { color: #E4002B; text-shadow: none; }
+[data-theme="televendita"] .row[data-rank="2"] .rank { color: #0047FF; }
+[data-theme="televendita"] .row[data-rank="3"] .rank { color: #00A651; }

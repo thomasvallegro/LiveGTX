@@ -1,0 +1,41 @@
+/* LiveGFX tema: Macchina da scrivere */
+/* Carta avorio, inchiostro nero e nastro rosso, righe di quaderno.
+   Si importa dal pannello: Impostazioni → I miei temi → Importa. */
+
+[data-theme="typewriter"] {
+  --yellow: #C9A227;
+  --green: #4F7A4A;
+  --cyan: #3B5B92;
+  --magenta: #B3261E;
+  --orange: #B8662E;
+  --white: #FFFDF6;
+  --accent: #B3261E;
+  --accent-2: #1E1B16;
+  --accent-3: #6B5B3E;
+  --danger: #FF3B4E;
+  --panel: rgba(250,244,228,.97);
+  --panel-2: #EFE6CF;
+  --line: rgba(30,27,22,.15);
+  --text: #1E1B16;
+  --text-dim: rgba(30,27,22,.62);
+  --text-on-accent: #FFFDF6;
+  --glow: 0;
+  --accent-glow: transparent;
+  --accent2-glow: transparent;
+  --accent2-edge: rgba(255,255,255,.15);
+  --radius: 2px;
+  --font-display: 'Special Elite', 'Inter', sans-serif;
+  --font-body: 'Special Elite', 'Inter', sans-serif;
+  --display-case: none;
+  --subs-font: 'Special Elite', monospace;
+  --subs-case: none;
+}
+[data-theme="typewriter"] .neon-edge { box-shadow: 0 2px 0 rgba(0,0,0,.12), 0 14px 30px rgba(0,0,0,.35); }
+[data-theme="typewriter"] .head::after, [data-theme="typewriter"] #tk::before, [data-theme="typewriter"] .question::after, [data-theme="typewriter"] #an .line { background: #B3261E; box-shadow: none; }
+[data-theme="typewriter"] #lt .bar { background: #B3261E; box-shadow: none; }
+[data-theme="typewriter"] #board .head, [data-theme="typewriter"] #board .rows, [data-theme="typewriter"] #lt .box, [data-theme="typewriter"] #tm, [data-theme="typewriter"] #tk, [data-theme="typewriter"] #ck, [data-theme="typewriter"] #vt .card, [data-theme="typewriter"] #win .box, [data-theme="typewriter"] #sb .teams { background-image: repeating-linear-gradient(180deg, transparent 0 31px, rgba(60,100,180,.13) 31px 32px); }
+[data-theme="typewriter"] #an .backdrop { background: radial-gradient(ellipse at center, var(--panel) 0, var(--panel-2) 60%, rgba(0,0,0,.25) 100%); }
+[data-theme="typewriter"] .opt .text, [data-theme="typewriter"] .opt .val { text-shadow: none; }
+[data-theme="typewriter"] [class*="c-"] { --c-glow: transparent; }
+[data-theme="typewriter"] .display, [data-theme="typewriter"] .name, [data-theme="typewriter"] .score, [data-theme="typewriter"] .rank,
+[data-theme="typewriter"] .time, [data-theme="typewriter"] .tag, [data-theme="typewriter"] .label { font-weight: 400; }

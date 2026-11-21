@@ -16,7 +16,7 @@
   if (new URLSearchParams(q).get('bg') === '1') document.body.classList.add('preview-bg');
   const pass = new URLSearchParams(q); pass.delete('bg');
   const extra = pass.toString() ? '?' + pass.toString() : '';
-  for (const name of ['ticker', 'clock', 'leaderboard', 'scoreboard', 'timer', 'lowerthird', 'vote', 'wheel', 'subtitles', 'announce', 'cover']) {
+  for (const name of ['ticker', 'clock', 'leaderboard', 'scoreboard', 'timer', 'lowerthird', 'vote', 'quiz', 'wheel', 'subtitles', 'announce', 'cover']) {
     const f = document.createElement('iframe');
     f.src = name + '.html' + extra;
     f.setAttribute('allowtransparency', 'true');

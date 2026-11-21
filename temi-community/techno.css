@@ -1,0 +1,40 @@
+/* LiveGFX tema: Elettronica */
+/* Monocromo, linee sottili che pulsano a tempo (128 bpm).
+   Si importa dal pannello: Impostazioni → I miei temi → Importa. */
+
+[data-theme="techno"] {
+  --yellow: #FFFFFF;
+  --green: #BDBDBD;
+  --cyan: #E0E0E0;
+  --magenta: #FF0040;
+  --orange: #9E9E9E;
+  --white: #FFFFFF;
+  --accent: #FFFFFF;
+  --accent-2: #8A8A8A;
+  --accent-3: #FF0040;
+  --danger: #FF0040;
+  --panel: rgba(0,0,0,.92);
+  --panel-2: rgba(20,20,20,.94);
+  --line: rgba(255,255,255,.14);
+  --text: #FFFFFF;
+  --text-dim: rgba(255,255,255,.55);
+  --text-on-accent: #000000;
+  --glow: 0;
+  --accent-glow: transparent;
+  --accent2-glow: transparent;
+  --accent2-edge: rgba(255,255,255,.15);
+  --radius: 0px;
+  --font-display: 'Michroma', 'Inter', sans-serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+  --display-case: uppercase;
+}
+[data-theme="techno"] .neon-edge { box-shadow: 0 0 0 1px rgba(255,255,255,.85); }
+[data-theme="techno"] .head::after, [data-theme="techno"] #tk::before, [data-theme="techno"] .question::after, [data-theme="techno"] #an .line { background: #FFFFFF; box-shadow: none; }
+[data-theme="techno"] #lt .bar { background: #FFFFFF; box-shadow: none; }
+[data-theme="techno"] #board .head, [data-theme="techno"] #board .rows, [data-theme="techno"] #lt .box, [data-theme="techno"] #tm, [data-theme="techno"] #tk, [data-theme="techno"] #ck, [data-theme="techno"] #vt .card, [data-theme="techno"] #win .box, [data-theme="techno"] #sb .teams { background-image: repeating-linear-gradient(0deg, rgba(255,255,255,.03) 0 1px, transparent 1px 4px); }
+[data-theme="techno"] #lt .tag, [data-theme="techno"] #tk .label, [data-theme="techno"] #tm .label, [data-theme="techno"] #ck .label, [data-theme="techno"] #board .live, [data-theme="techno"] #sb .title, [data-theme="techno"] #an .kicker { font-family: 'Inter', system-ui, sans-serif; }
+[data-theme="techno"] .display { letter-spacing: .12em; font-weight: 500; }
+[data-theme="techno"] .head::after, [data-theme="techno"] #tk::before, [data-theme="techno"] .question::after, [data-theme="techno"] #an .line {
+  height: 2px; animation: tc-beat .469s ease-out infinite; }
+@keyframes tc-beat { 0% { opacity: 1; } 100% { opacity: .25; } }
+[data-theme="techno"] .live .dot, [data-theme="techno"] #tk .label .dot { background: #FF0040; box-shadow: none; animation: tc-beat .469s ease-out infinite; }

@@ -1,8 +1,0 @@
-/* LiveGFX tema: Vaporwave */
-[data-theme="vaporwave"] {
-  --accent: #FF71CE; --accent-2: #01CDFE; --accent-3: #B967FF; --yellow:#FFFB96; --green:#05FFA1; --cyan:#01CDFE; --magenta:#FF71CE;
-  --panel: rgba(30, 10, 60, .9); --panel-2: rgba(50, 20, 90, .92); --text:#FFFFFF; --text-dim: rgba(255,255,255,.7); --text-on-accent:#1E0A3C;
-  --radius: 0px; --accent-glow: rgba(255,113,206,.7); --accent2-glow: rgba(1,205,254,.5); --accent2-edge: rgba(1,205,254,.8);
-  --font-display: 'Chakra Petch', sans-serif;
-}
-[data-theme="vaporwave"] .neon-edge { box-shadow: 6px 6px 0 #01CDFE, -6px -6px 0 #FF71CE; }

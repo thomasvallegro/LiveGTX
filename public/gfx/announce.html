@@ -14,7 +14,7 @@
   .line { height: 3px; width: 900px; margin: 0 auto; background: linear-gradient(90deg, transparent, var(--cyan), var(--green), var(--yellow), transparent);
     box-shadow: 0 0 18px var(--accent2-glow); }
   .kicker { font: 700 34px var(--font-display); letter-spacing: .4em; text-transform: uppercase; color: var(--accent-2); margin: 34px 0 10px; }
-  .title { font-size: 150px; line-height: 1; color: var(--accent); white-space: nowrap; }
+  .title { font-size: 150px; line-height: 1.05; color: var(--accent); white-space: nowrap; text-align: center; }
   .subtitle { font: 400 40px var(--font-body); color: var(--text); opacity: .85; margin: 22px 0 34px; }
 </style>
 </head>
@@ -39,11 +39,23 @@ function fill(A) {
   const k = document.getElementById('kicker'), s = document.getElementById('subtitle'), t = document.getElementById('title');
   k.textContent = A.kicker; k.style.display = A.kicker ? '' : 'none';
   s.textContent = A.subtitle; s.style.display = A.subtitle ? '' : 'none';
-  t.style.fontSize = '150px';
   LiveGFX.splitChars(t, A.title);
-  // titoli lunghi: riduce la dimensione per stare nello schermo
+  fitTitle(t);
+}
+// Titoli lunghi: prima rimpicciolisce su una riga (fino a 110 px); se non basta va su due righe,
+// sempre centrato. Misura lo spazio vero del riquadro, che cambia da tema a tema.
+function fitTitle(t) {
+  const fits = () => t.scrollWidth <= t.clientWidth + 1;
+  t.style.whiteSpace = 'nowrap';
   let size = 150;
-  while (t.scrollWidth > 1700 && size > 60) { size -= 6; t.style.fontSize = size + 'px'; }
+  t.style.fontSize = size + 'px';
+  while (!fits() && size > 110) { size -= 4; t.style.fontSize = size + 'px'; }
+  if (fits()) return;
+  t.style.whiteSpace = 'normal';            // due righe: le parole non si spezzano
+  size = 140;
+  const lines = () => Math.round(t.scrollHeight / (size * 1.05));
+  t.style.fontSize = size + 'px';
+  while ((!fits() || lines() > 2) && size > 60) { size -= 4; t.style.fontSize = size + 'px'; }
 }
 function animIn() {
   tl?.kill();
@@ -67,15 +79,23 @@ function animOut(then) {
     .set('#title', { scale: 1 });
 }
 
+// Se il tema cambia o un font finisce di caricarsi dopo, il titolo si riadatta
+let lastTheme = null;
+const refit = () => { const t = document.getElementById('title'); if (onAir && t.textContent) fitTitle(t); };
+document.fonts.addEventListener('loadingdone', refit);
+
 LiveGFX.onState((s) => {
+  if (s.theme !== lastTheme || s.theme === 'custom') { lastTheme = s.theme; requestAnimationFrame(() => requestAnimationFrame(refit)); }
   const A = s.announce;
   const key = A.visible ? String(A.shownAt) : null;
   if (key === onAir) return;
   const wasOn = onAir !== null;
   onAir = key;
   if (!key) { if (wasOn) animOut(); return; }
-  if (wasOn) animOut(() => { fill(A); animIn(); });
-  else { fill(A); animIn(); }
+  // aspetta i font prima di misurare, altrimenti le dimensioni sarebbero sbagliate
+  const go = () => document.fonts.ready.then(() => { fill(A); animIn(); });
+  if (wasOn) animOut(go);
+  else go();
 });
 </script>
 </body>
