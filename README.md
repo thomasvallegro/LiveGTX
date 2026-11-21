@@ -10,7 +10,7 @@ Grafiche live animate per OBS, aggiornabili in tempo reale da un pannello web, a
 | ![Tema Cinema](docs/screenshots/tema-cinema.jpg) | ![Tema Old Game](docs/screenshots/tema-oldgame.jpg) |
 | ![Sfondi animati](docs/screenshots/sfondi.jpg) | ![Copertura](docs/screenshots/copertura.jpg) |
 
-☕ **Ti è utile?** LiveGFX è gratuito. Se ti ha risparmiato tempo, puoi [offrirmi un caffè](LINK-CAFFE).
+☕ **Ti è utile?** LiveGFX è gratuito. Se ti ha risparmiato tempo, puoi [offrirmi un caffè](https://buymeacoffee.com/thomasvallegro).
 
 **Grafiche incluse**
 | Grafica | Cosa fa |
@@ -339,4 +339,4 @@ Licenza MIT per il codice di LiveGFX. I componenti di terze parti (GSAP, font, g
 
 ## Sostieni il progetto
 
-LiveGFX è e resterà gratuito. Se lo usi per i tuoi eventi e vuoi ringraziare, [offrimi un caffè](LINK-CAFFE) ☕. Segnalare bug e proporre idee nelle Issues aiuta altrettanto.
+LiveGFX è e resterà gratuito. Se lo usi per i tuoi eventi e vuoi ringraziare, [offrimi un caffè](https://buymeacoffee.com/thomasvallegro) ☕. Segnalare bug e proporre idee nelle Issues aiuta altrettanto.
